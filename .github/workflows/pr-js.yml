@@ -1,10 +1,8 @@
-name: pr-js
-
 on:
   workflow_call:
 
 jobs:
-  build:
+  pr-js:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
