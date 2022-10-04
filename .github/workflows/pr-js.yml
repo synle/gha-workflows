@@ -1,9 +1,13 @@
 on:
   workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
 
 jobs:
   pr-js:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.os }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
