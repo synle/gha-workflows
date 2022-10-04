@@ -4,6 +4,7 @@ on:
       os:
         required: true
         type: string
+        default: 'ubuntu-latest'
 
 jobs:
   pr-js-yarn:
