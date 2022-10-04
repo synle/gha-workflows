@@ -6,7 +6,7 @@ on:
         type: string
 
 jobs:
-  pr-js:
+  pr-js-yarn:
     runs-on: ${{ inputs.os }}
     timeout-minutes: 20
     steps:
