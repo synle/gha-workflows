@@ -10,6 +10,7 @@ jobs:
   build:
     runs-on: ${{ inputs.os }}
     timeout-minutes: 20
+    name: Build and Prettier for ${{ inputs.filename }} on ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v2
         with:
