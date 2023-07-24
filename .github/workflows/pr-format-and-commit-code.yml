@@ -18,7 +18,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '14'
-          cache: 'yarn'
       - run: npx prettier --write **/*.{html,md}
       - uses: EndBug/add-and-commit@v8
         with:
