@@ -1,0 +1,27 @@
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+        default: 'ubuntu-latest'
+
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: https://registry.npmjs.org/
+      - run: make format
+      - uses: EndBug/add-and-commit@v8
+        with:
+          message: 'CI / CD - Prettier Automatic Commit'
+        continue-on-error: true
+
