@@ -1,29 +1,37 @@
+name: PR JS Yarn
+
 on:
   workflow_call:
     inputs:
       os:
-        required: true
+        required: false
         type: string
         default: "ubuntu-latest"
+      node-version:
+        required: false
+        type: string
+        default: "24.x"
 
 jobs:
   pr-js-yarn:
     runs-on: ${{ inputs.os }}
     timeout-minutes: 20
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
-      - uses: actions/setup-node@v3
+          ref: ${{ github.head_ref || github.ref_name }}
+      - uses: actions/setup-node@v4
         with:
-          node-version: "14"
+          node-version: ${{ inputs.node-version }}
           cache: "yarn"
       - run: yarn install --network-timeout 1000000 --frozen-lockfile
-      - run: yarn check
       - run: yarn format
       - run: yarn test-ci
       - run: yarn build
-      - uses: EndBug/add-and-commit@v8
+      - uses: EndBug/add-and-commit@v9
         with:
           message: "CI / CD - Format Updates Automatic Commit"
+          default_author: github_actions
         continue-on-error: true
