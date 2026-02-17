@@ -13,72 +13,6 @@ FORMAT_COMMAND_TO_RUN: $FORMAT_COMMAND_TO_RUN
 """
 
 # NOTE: refer to https://github.com/synle/bashrc/blob/master/.build/format for the latest
-function format_cleanup {
-  echo "🧹 Cleaning up junk files (*.Identifier, ._*)..."
-
-  local base_dir="${1:-.}"
-
-  if [ ! -d "$base_dir" ]; then
-    echo "❌ Directory '$base_dir' not found."
-    return 1
-  fi
-
-  local count=$(find "$base_dir" \
-    -type f \( -name '*.Identifier' -o -name '._*' \) \
-    -not -path '*/__pycache__/*' \
-    -not -path '*/.cache/*' \
-    -not -path '*/.ebextensions/*' \
-    -not -path '*/.generated/*' \
-    -not -path '*/.git/*' \
-    -not -path '*/.gradle/*' \
-    -not -path '*/.hg/*' \
-    -not -path '*/.idea/*' \
-    -not -path '*/.mypy_cache/*' \
-    -not -path '*/.pytest_cache/*' \
-    -not -path '*/.sass-cache/*' \
-    -not -path '*/.svn/*' \
-    -not -path '*/bower_components/*' \
-    -not -path '*/build/*' \
-    -not -path '*/coverage/*' \
-    -not -path '*/CVS/*' \
-    -not -path '*/dist/*' \
-    -not -path '*/node_modules/*' \
-    -not -path '*/tmp/*' \
-    -not -path '*/venv/*' \
-    -not -path '*/webpack-dist/*' \
-    -print | wc -l)
-
-  if [ "$count" -gt 0 ]; then
-    find "$base_dir" \
-      -type f \( -name '*.Identifier' -o -name '._*' \) \
-      -not -path '*/__pycache__/*' \
-    -not -path '*/.cache/*' \
-    -not -path '*/.ebextensions/*' \
-    -not -path '*/.generated/*' \
-    -not -path '*/.git/*' \
-    -not -path '*/.gradle/*' \
-    -not -path '*/.hg/*' \
-    -not -path '*/.idea/*' \
-    -not -path '*/.mypy_cache/*' \
-    -not -path '*/.pytest_cache/*' \
-    -not -path '*/.sass-cache/*' \
-    -not -path '*/.svn/*' \
-    -not -path '*/bower_components/*' \
-    -not -path '*/build/*' \
-    -not -path '*/coverage/*' \
-    -not -path '*/CVS/*' \
-    -not -path '*/dist/*' \
-    -not -path '*/node_modules/*' \
-    -not -path '*/tmp/*' \
-    -not -path '*/venv/*' \
-    -not -path '*/webpack-dist/*' \
-      -delete
-    echo "✅ Removed $count junk files in: $base_dir"
-  else
-    echo "✨ No junk files found in: $base_dir"
-  fi
-}
-
 function format_cleanup_light {
   local base_dir="${1:-.}"
   local max_depth=4
@@ -205,5 +139,5 @@ function format_other_text_based_files {
 }
 
 ############################################
-format_cleanup
+format_cleanup_light
 format_other_text_based_files
