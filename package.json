@@ -4,7 +4,7 @@
   "description": "Sy's Common github actions flow",
   "main": "index.js",
   "scripts": {
-    "format": "prettier --write \"**/**/**/**/*.{css,js,html,md,json,jsx,yml}\""
+    "format": "prettier --write --ignore-unknown \"**/**/**/**/*.{html,xml,jsx,less,scss,yml,md,json,prettierrc}\""
   },
   "devDependencies": {
     "prettier": "^3.8.1"
