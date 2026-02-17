@@ -13,7 +13,7 @@ const additions = [
   'coverage',
   'dist',
   'node_modules',
-];
+].sort();
 const fs = require('fs');
 
 let existing = '';
@@ -25,7 +25,7 @@ const lines = [...existing.split(/\r?\n/), ...additions]
   .map(l => l.trim())
   .filter(Boolean);
 
-const unique = [...new Set(lines)];
+const unique = [...new Set(lines)].sort();
 fs.writeFileSync(file, unique.join('\n') + '\n');
 console.log('✅ ' + file + ' consolidated and cleaned.');
 """
@@ -58,7 +58,7 @@ const additions = [
   'yarn-debug.log*', 
   'yarn-error.log*', 
   'yarn.lock',
-];
+].sort();
 const fs = require('fs');
 let existing = '';
 if (fs.existsSync(file)) {
