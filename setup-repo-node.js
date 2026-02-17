@@ -1,68 +1,80 @@
 ## curl -s -- https://raw.githubusercontent.com/synle/gha-workflows/refs/heads/main/setup-repo-node.js | bash -s --
-# 1. Initialize configuration files
+# Initialize configuration files
 echo "* text=auto eol=lf" > .gitattributes
 
-echo """
-build
-*.bundle.*
-*.min.*
-.build
-coverage
-dist
-node_modules  
-""" >> .prettierignore
-# Deduplicate (Preserving Order)
+# prettier
 node -e """
 const file = '.prettierignore';
+const additions = [
+  'build',
+  '*.bundle.*',
+  '*.min.*',
+  '.build',
+  'coverage',
+  'dist',
+  'node_modules',
+];
 const fs = require('fs');
+
+let existing = '';
 if (fs.existsSync(file)) {
-  const content = fs.readFileSync(file, 'utf8');
-  const lines = content.split(/\r?\n/);
-  const unique = [...new Set(lines)];
-  fs.writeFileSync(file, unique.join('\n'));
-  console.log('✅ ' + file + ' cleaned (duplicates removed).');
+  existing = fs.readFileSync(file, 'utf8');
 }
+
+const lines = [...existing.split(/\r?\n/), ...additions]
+  .map(l => l.trim())
+  .filter(Boolean);
+
+const unique = [...new Set(lines)];
+fs.writeFileSync(file, unique.join('\n') + '\n');
+console.log('✅ ' + file + ' consolidated and cleaned.');
 """
 
-echo """*.LICENSE.txt
-*.rej
-*storybook.log
-.cache
-.claude
-.DS_Store
-.env
-.npmrc
-.nyc_output
-.prettier-cache
-.vs-code
-build
-coverage
-DEBUG
-dist
-Error
-node_modules
-npm-debug.log*
-package-lock.json
-public/vs
-upload
-yarn-debug.log*
-yarn-error.log*
-yarn.lock""" >> .gitignore
-
-# Deduplicate (Preserving Order)
+# gitignore
 node -e """
 const file = '.gitignore';
+const additions = [
+  '*.LICENSE.txt', 
+  '*.rej', 
+  '*storybook.log', 
+  '.cache', 
+  '.claude', 
+  '.DS_Store', 
+  '.env', 
+  '.npmrc', 
+  '.nyc_output', 
+  '.prettier-cache', 
+  '.vs-code', 
+  'build', 
+  'coverage', 
+  'DEBUG', 
+  'dist', 
+  'Error', 
+  'node_modules', 
+  'npm-debug.log*', 
+  'package-lock.json', 
+  'public/vs', 
+  'upload', 
+  'yarn-debug.log*', 
+  'yarn-error.log*', 
+  'yarn.lock',
+];
 const fs = require('fs');
+let existing = '';
 if (fs.existsSync(file)) {
-  const content = fs.readFileSync(file, 'utf8');
-  const lines = content.split(/\r?\n/);
-  const unique = [...new Set(lines)];
-  fs.writeFileSync(file, unique.join('\n'));
-  console.log('✅ ' + file + ' cleaned (duplicates removed).');
+  existing = fs.readFileSync(file, 'utf8');
 }
+
+const lines = [...existing.split(/\r?\n/), ...additions]
+  .map(l => l.trim())
+  .filter(Boolean);
+
+const unique = [...new Set(lines)];
+fs.writeFileSync(file, unique.join('\n') + '\n');
+console.log('✅ ' + file + ' consolidated and cleaned.');
 """
 
-# 3. Update package.json scripts using Node (No jq required)
+# Update package.json scripts using Node (No jq required)
 node -e """
 const fs = require('fs');
 const file = 'package.json';
