@@ -4,7 +4,7 @@ on:
       os:
         required: true
         type: string
-        default: 'ubuntu-latest'
+        default: "ubuntu-latest"
 
 jobs:
   build:
@@ -16,9 +16,9 @@ jobs:
           ref: ${{ github.head_ref }}
       - uses: actions/setup-node@v3
         with:
-          node-version: '14'
+          node-version: "14"
       - run: npx prettier --write **/*.{html,md}
       - uses: EndBug/add-and-commit@v8
         with:
-          message: 'CI / CD - Prettier Automatic Commit'
+          message: "CI / CD - Prettier Automatic Commit"
         continue-on-error: true

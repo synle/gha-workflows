@@ -4,7 +4,7 @@ on:
       os:
         required: true
         type: string
-        default: 'ubuntu-latest'
+        default: "ubuntu-latest"
 
 jobs:
   pr-js-yarn:
@@ -16,14 +16,14 @@ jobs:
           ref: ${{ github.head_ref }}
       - uses: actions/setup-node@v3
         with:
-          node-version: '16'
-          cache: 'yarn'
+          node-version: "16"
+          cache: "yarn"
       - run: yarn install --network-timeout 1000000 --frozen-lockfile
       - run: yarn check
       - run: yarn format
       - uses: EndBug/add-and-commit@v8
         with:
-          message: 'CI / CD - Format Updates Automatic Commit'
+          message: "CI / CD - Format Updates Automatic Commit"
         continue-on-error: true
       - run: yarn test-ci
       - run: yarn build
