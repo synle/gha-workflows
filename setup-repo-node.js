@@ -1,16 +1,12 @@
-echo '''
-* text=auto eol=lf
-''' > .gitattributes
+# 1. Initialize configuration files
+echo "* text=auto eol=lf" > .gitattributes
 
-echo '''
-*.min.*
+echo """*.min.*
 .build
 dist
-*.bundle.*
-''' > .prettierignore
+*.bundle.*""" > .prettierignore
 
-echo '''
-*.LICENSE.txt
+echo """*.LICENSE.txt
 *.rej
 *storybook.log
 .cache
@@ -33,26 +29,32 @@ public/vs
 upload
 yarn-debug.log*
 yarn-error.log*
-yarn.lock
-''' >> .gitignore
+yarn.lock""" >> .gitignore
 
-# Deduplicate removals (Preserving Order)
+# 2. Deduplicate .gitignore (Preserving Order)
 node -e """
 const fs = require('fs');
 const file = '.gitignore';
 if (fs.existsSync(file)) {
-  const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+  const content = fs.readFileSync(file, 'utf8');
+  const lines = content.split(/\r?\n/);
   const unique = [...new Set(lines)];
   fs.writeFileSync(file, unique.join('\n'));
-  console.log(`✅ ${file} cleaned (duplicates removed).`);
+  console.log('✅ .gitignore cleaned (duplicates removed).');
 }
 """
 
-
-# We'll use a temporary file to ensure the write is successful
-if command -v jq >/dev/null 2>&1; then
-  jq '.scripts.format = "prettier --write --ignore-unknown --cache '\''**/*.{js,jsx,ts,tsx,mjs,cjs,json,html,css,scss,less,md,yml,yaml,graphql,vue,xml}'\''"' package.json > package.json.tmp && mv package.json.tmp package.json
-  echo "✅ package.json scripts updated."
-else
-  echo "❌ Error: jq is not installed. Please install it to update package.json automatically."
-fi
+# 3. Update package.json scripts using Node (No jq required)
+node -e """
+const fs = require('fs');
+const file = 'package.json';
+if (fs.existsSync(file)) {
+  const pkg = JSON.parse(fs.readFileSync(file, 'utf8'));
+  pkg.scripts = pkg.scripts || {};
+  pkg.scripts.format = \"prettier --write --ignore-unknown --cache '**/*.{js,jsx,ts,tsx,mjs,cjs,json,html,css,scss,less,md,yml,yaml,graphql,vue,xml}'\";
+  fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n');
+  console.log('✅ package.json format script updated.');
+} else {
+  console.log('❌ Error: package.json not found.');
+}
+"""
