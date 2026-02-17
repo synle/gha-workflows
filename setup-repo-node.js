@@ -11,6 +11,18 @@ coverage
 dist
 node_modules  
 """ >> .prettierignore
+# Deduplicate (Preserving Order)
+node -e """
+const file = '.prettierignore';
+const fs = require('fs');
+if (fs.existsSync(file)) {
+  const content = fs.readFileSync(file, 'utf8');
+  const lines = content.split(/\r?\n/);
+  const unique = [...new Set(lines)];
+  fs.writeFileSync(file, unique.join('\n'));
+  console.log('✅ ' + file + ' cleaned (duplicates removed).');
+}
+"""
 
 echo """*.LICENSE.txt
 *.rej
