@@ -2,10 +2,15 @@
 # 1. Initialize configuration files
 echo "* text=auto eol=lf" > .gitattributes
 
-echo """*.min.*
+echo """
+build
+*.bundle.*
+*.min.*
 .build
+coverage
 dist
-*.bundle.*""" > .prettierignore
+node_modules  
+""" >> .prettierignore
 
 echo """*.LICENSE.txt
 *.rej
@@ -32,16 +37,16 @@ yarn-debug.log*
 yarn-error.log*
 yarn.lock""" >> .gitignore
 
-# 2. Deduplicate .gitignore (Preserving Order)
+# Deduplicate (Preserving Order)
 node -e """
-const fs = require('fs');
 const file = '.gitignore';
+const fs = require('fs');
 if (fs.existsSync(file)) {
   const content = fs.readFileSync(file, 'utf8');
   const lines = content.split(/\r?\n/);
   const unique = [...new Set(lines)];
   fs.writeFileSync(file, unique.join('\n'));
-  console.log('✅ .gitignore cleaned (duplicates removed).');
+  console.log('✅ ' + file + ' cleaned (duplicates removed).');
 }
 """
 
