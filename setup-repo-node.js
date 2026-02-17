@@ -1,3 +1,4 @@
+## curl -s -- https://raw.githubusercontent.com/synle/gha-workflows/refs/heads/main/setup-repo-node.js | bash -s --
 # 1. Initialize configuration files
 echo "* text=auto eol=lf" > .gitattributes
 
