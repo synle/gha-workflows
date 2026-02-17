@@ -1,0 +1,75 @@
+name: Common Build and Commit with NodeJS and Build.sh
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        type: string
+        required: false
+        default: '24.x'
+
+jobs:
+  build:
+    name: node ${{ inputs.node-version }}, npm and build.sh
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    env:
+      is_os_darwin_mac: 0
+      is_os_window: 0
+      is_os_wsl: 0
+      is_os_ubuntu: 1
+      is_os_chromeos: 0
+      is_os_mingw64: 0
+      is_os_android_termux: 0
+      
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Setup Node.js
+        continue-on-error: true
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
+
+      - name: Install Dependencies
+        continue-on-error: true  # Always continue so minor npm warnings don't kill the flow
+        run: |
+          if [ -f package-lock.json ]; then
+            echo ">>>>>>   Running npm ci <<<<<<<"
+            npm ci
+          elif [ -f package.json ]; then
+            echo ">>>>>>   Running npm install <<<<<<<"
+            npm install
+          else
+            echo "No package.json found, skipping install."
+          fi
+
+      - name: Build with build.sh
+        run: |
+          if [ -f build.sh ]; then
+            echo ">>>>>> Running build.sh <<<<<<<"
+            sh build.sh
+          fi
+          
+          if [ -f test.sh ]; then
+            echo ">>>>>> Running test.sh <<<<<<<"
+            sh test.sh
+          fi
+
+      - name: Format Plain Text and JS
+        continue-on-error: true
+        run: |
+          echo ">>>>>> Running format.sh <<<<<<<"
+          curl -s https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/format.sh | bash -
+
+      - name: Commit Changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: 'CI / CD - Build artifacts and format code'
+          default_author: github_actions
