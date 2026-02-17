@@ -76,15 +76,18 @@ console.log('✅ ' + file + ' consolidated and cleaned.');
 
 # Update package.json scripts using Node (No jq required)
 node -e """
-const fs = require('fs');
 const file = 'package.json';
+const fs = require('fs');
 if (fs.existsSync(file)) {
   const pkg = JSON.parse(fs.readFileSync(file, 'utf8'));
   pkg.scripts = pkg.scripts || {};
+  
+  // Use backticks for the value to avoid escaping nightmares
   pkg.scripts.format = \"prettier --write --ignore-unknown --cache '**/*.{js,jsx,ts,tsx,mjs,cjs,json,html,css,scss,less,md,yml,yaml,graphql,vue,xml}'\";
+  
   fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n');
-  console.log('✅ package.json format script updated.');
+  console.log('✅ '+file+' format script updated.');
 } else {
-  console.log('❌ Error: package.json not found.');
+  console.log('❌ '+file+' not found.');
 }
 """
