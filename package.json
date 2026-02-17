@@ -1,0 +1,12 @@
+{
+  "name": "synle-gha-workflow",
+  "version": "1.0.0",
+  "description": "Sy's Common github actions flow",
+  "main": "index.js",
+  "scripts": {
+    "format": "prettier --write \"**/**/**/**/*.{css,js,html,md,json,jsx,yml}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.8.1"
+  }
+}
