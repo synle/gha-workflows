@@ -94,7 +94,7 @@ if (fs.existsSync(file)) {
   pkg.scripts = pkg.scripts || {};
   
   // Use backticks for the value to avoid escaping nightmares
-  pkg.scripts.format = \"prettier --write --ignore-unknown --cache '**/*.{js,jsx,ts,tsx,mjs,cjs,json,html,css,scss,less,md,yml,yaml,graphql,vue,xml}'\";
+  pkg.scripts.format = \"prettier --write --print-width 140 --ignore-unknown --cache '**/*.{js,jsx,ts,tsx,mjs,cjs,json,html,css,scss,less,md,yml,yaml,graphql,vue,xml}'\";
   
   fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n');
   console.log('✅ '+file+' format script updated.');
