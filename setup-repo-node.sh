@@ -2,6 +2,18 @@
 # Initialize configuration files
 echo "* text=auto eol=lf" > .gitattributes
 
+echo "
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: '/'
+    schedule:
+      interval: monthly
+      time: '13:00'
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+" > .github/dependabot.yml
+
 # prettier
 node -e """
 const file = '.prettierignore';
