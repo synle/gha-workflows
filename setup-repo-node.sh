@@ -2,7 +2,8 @@
 # Initialize configuration files
 echo "* text=auto eol=lf" > .gitattributes
 
-echo "
+# dependabot
+cat <<EOF > .github/dependabot.yml
 version: 2
 updates:
   - package-ecosystem: npm
@@ -12,7 +13,7 @@ updates:
       time: '13:00'
     open-pull-requests-limit: 10
     versioning-strategy: increase
-" > .github/dependabot.yml
+EOF
 
 # prettier
 node -e """
@@ -64,12 +65,10 @@ const additions = [
   'Error', 
   'node_modules', 
   'npm-debug.log*', 
-  'package-lock.json', 
   'public/vs', 
   'upload', 
   'yarn-debug.log*', 
   'yarn-error.log*', 
-  'yarn.lock',
 ].sort();
 const fs = require('fs');
 let existing = '';
