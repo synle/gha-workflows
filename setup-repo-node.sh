@@ -97,8 +97,8 @@ if (fs.existsSync(file)) {
   pkg.scripts.format = \"prettier --write --cache --ignore-unknown --no-error-on-unmatched-pattern --print-width 140 .\";
   if(!pkg?.dependencies?.prettier || !pkg?.devDependencies?.prettier){
     const prettierVersionToUse = pkg?.dependencies?.prettier || pkg?.devDependencies?.prettier || '^3.8.1';
-    delete pkg.dependencies.prettier;
-    delete pkg.devDependencies.prettier;
+    delete pkg?.dependencies?.prettier;
+    delete pkg?.devDependencies?.prettier;
     pkg.devDependencies.prettier = prettierVersionToUse;
   }
   
