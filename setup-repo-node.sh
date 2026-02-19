@@ -94,7 +94,13 @@ if (fs.existsSync(file)) {
   pkg.scripts = pkg.scripts || {};
   
   // Use backticks for the value to avoid escaping nightmares
-  pkg.scripts.format = \"prettier --write --print-width 140 --ignore-unknown --no-error-on-unmatched-pattern --cache '**/*.{js,jsx,ts,tsx,mjs,cjs,json,html,css,scss,less,md,yml,yaml,graphql,vue,xml}'\";
+  pkg.scripts.format = \"prettier --write --cache --ignore-unknown --no-error-on-unmatched-pattern --print-width 140 .\";
+  if(!pkg?.dependencies?.prettier || !pkg?.devDependencies?.prettier){
+    const prettierVersionToUse = pkg?.dependencies?.prettier || pkg?.devDependencies?.prettier || '^3.8.1';
+    delete pkg.dependencies.prettier;
+    delete pkg.devDependencies.prettier;
+    pkg.devDependencies.prettier = prettierVersionToUse;
+  }
   
   fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n');
   console.log('✅ '+file+' format script updated.');
