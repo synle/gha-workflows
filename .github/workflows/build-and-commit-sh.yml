@@ -4,17 +4,24 @@ on:
   workflow_call:
     inputs:
       node-version:
+        description: "Node.js version to use"
         type: string
         required: false
         default: "24.x"
       early-exit-on-commit:
+        description: "Exit with failure after committing so the workflow re-triggers with updated code"
         type: boolean
         required: false
         default: false
+      ignore-commit-pattern:
+        description: "Regex pattern for files to exclude from commit (skip commit if only these change)"
+        type: string
+        required: false
+        default: "sw*.js"
 
 jobs:
   build:
-    name: node ${{ inputs.node-version }}, npm and build.sh
+    name: Node ${{ inputs.node-version }} - Build and Commit
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -42,45 +49,72 @@ jobs:
           cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
 
       - name: Install Dependencies
-        continue-on-error: true # Always continue so minor npm warnings don't kill the flow
+        continue-on-error: true
         run: |
           if [ -f package-lock.json ]; then
-            echo ">>>>>>   Running npm ci <<<<<<<"
+            echo "::group::🚀 Running npm ci @ $(date '+%Y-%m-%d %H:%M:%S')"
             npm ci
+            echo "::endgroup::"
           elif [ -f package.json ]; then
-            echo ">>>>>>   Running npm install <<<<<<<"
+            echo "::group::🚀 Running npm install @ $(date '+%Y-%m-%d %H:%M:%S')"
             npm install
+            echo "::endgroup::"
           else
-            echo "No package.json found, skipping install."
+            echo "⏭️ Skipping. No package.json found."
           fi
 
       - name: Build with build.sh
         run: |
           if [ -f build.sh ]; then
-            echo ">>>>>> Running build.sh <<<<<<<"
+            echo "::group::🔨 Running build.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
             sh build.sh
+            echo "::endgroup::"
+          else
+            echo "⏭️ Skipping build.sh (not found)"
           fi
 
+      - name: Test with test.sh
+        run: |
           if [ -f test.sh ]; then
-            echo ">>>>>> Running test.sh <<<<<<<"
+            echo "::group::🧪 Running test.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
             sh test.sh
+            echo "::endgroup::"
+          else
+            echo "⏭️ Skipping test.sh (not found)"
           fi
 
-      - name: Format Plain Text and JS
+      - name: Format Code
         continue-on-error: true
         run: |
-          echo ">>>>>> Running format.sh <<<<<<<"
-          curl -s https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/format.sh | bash -
+          echo "::group::✨ Running format.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
+          curl -s -- https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/format.sh | bash -s --
+          echo "::endgroup::"
+
+      - name: Check for Meaningful Changes
+        id: check-changes
+        run: |
+          changed_files=$(git diff --name-only && git diff --name-only --cached && git ls-files --others --exclude-standard)
+          meaningful_files=$(echo "$changed_files" | grep -v '^$' | grep -v -E '${{ inputs.ignore-commit-pattern }}' || true)
+          if [ -z "$meaningful_files" ]; then
+            echo "Only ignored files changed, skipping commit."
+            echo "should_commit=false" >> "$GITHUB_OUTPUT"
+            git checkout -- . 2>/dev/null || true
+          else
+            echo "Meaningful changes detected:"
+            echo "$meaningful_files"
+            echo "should_commit=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Commit Changes
+        if: steps.check-changes.outputs.should_commit != 'false'
         id: commit
         uses: EndBug/add-and-commit@v9
         with:
           message: "CI / CD - Build artifacts and format code"
           default_author: github_actions
 
-      - name: Early exit if changes were committed
+      - name: Early Exit on Commit
         if: inputs.early-exit-on-commit && steps.commit.outputs.committed == 'true'
         run: |
-          echo "Changes were committed. Exiting early to re-trigger the workflow with the updated code."
+          echo "Changes were committed. Exiting early to re-trigger the workflow with updated code."
           exit 1
