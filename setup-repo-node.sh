@@ -86,25 +86,30 @@ console.log('✅ ' + file + ' consolidated and cleaned.');
 """
 
 # Update package.json scripts using Node (No jq required)
-node -e """
-const file = 'package.json';
-const fs = require('fs');
+node -e '
+const file = "package.json";
+const fs = require("fs");
 if (fs.existsSync(file)) {
-  const pkg = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const pkg = JSON.parse(fs.readFileSync(file, "utf8"));
   pkg.scripts = pkg.scripts || {};
   
-  // Use backticks for the value to avoid escaping nightmares
-  pkg.scripts.format = \"prettier --write --cache --ignore-unknown --no-error-on-unmatched-pattern --print-width 140 .\";
-  if(!pkg?.dependencies?.prettier || !pkg?.devDependencies?.prettier){
-    const prettierVersionToUse = pkg?.dependencies?.prettier || pkg?.devDependencies?.prettier || '^3.8.1';
-    delete pkg?.dependencies?.prettier;
-    delete pkg?.devDependencies?.prettier;
-    pkg.devDependencies.prettier = prettierVersionToUse;
+  pkg.scripts.format = "prettier --write --cache --ignore-unknown --no-error-on-unmatched-pattern --print-width 140 .";
+  
+  const currentPrettier = pkg?.dependencies?.prettier || pkg?.devDependencies?.prettier;
+  
+  if (!currentPrettier) {
+    pkg.devDependencies = pkg.devDependencies || {};
+    pkg.devDependencies.prettier = "^3.8.1";
+  } else if (pkg.dependencies?.prettier) {
+    // Move from dependencies to devDependencies if it exists there
+    delete pkg.dependencies.prettier;
+    pkg.devDependencies = pkg.devDependencies || {};
+    pkg.devDependencies.prettier = currentPrettier;
   }
   
-  fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n');
-  console.log('✅ '+file+' format script updated.');
+  fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + "\n");
+  console.log("✅ " + file + " format script updated.");
 } else {
-  console.log('❌ '+file+' not found.');
+  console.log("❌ " + file + " not found.");
 }
-"""
+'
