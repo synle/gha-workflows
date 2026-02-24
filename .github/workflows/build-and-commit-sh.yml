@@ -14,10 +14,10 @@ on:
         required: false
         default: false
       ignore-commit-pattern:
-        description: "Regex pattern for files to exclude from commit (skip commit if only these change)"
+        description: "Extended regex pattern matching git diff paths (no ./ prefix) to exclude from commit (skip commit if only these change)"
         type: string
         required: false
-        default: "./dist/sw*.js"
+        default: "^dist/sw.*\\.js$"
 
 jobs:
   build:
