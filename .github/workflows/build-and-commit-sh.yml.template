@@ -16,3 +16,7 @@ jobs:
     uses: synle/gha-workflows/.github/workflows/build-and-commit-sh.yml@main
     permissions:
       contents: write
+    with:
+      node-version: "24.x"
+      early-exit-on-commit: false
+      ignore-commit-pattern: "^dist/sw.*\\.js$"
