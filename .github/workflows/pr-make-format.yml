@@ -17,7 +17,7 @@ on:
         description: "Regex pattern for files to exclude from commit (skip commit if only these change)"
         type: string
         required: false
-        default: "sw*.js"
+        default: "^dist/sw.*\\.js$"
       use-default-format-script:
         description: "Use the default remote format.sh script instead of local make format or npm run format"
         type: boolean

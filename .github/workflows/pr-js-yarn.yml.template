@@ -1,0 +1,22 @@
+name: build-main
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # https://github.com/synle/gha-workflows/blob/main/.github/workflows/pr-js-yarn.yml
+    uses: synle/gha-workflows/.github/workflows/pr-js-yarn.yml@main
+    permissions:
+      contents: write
+    with:
+      os: "ubuntu-latest"
+      node-version: "24.x"
+      ignore-commit-pattern: "^dist/sw.*\\.js$"
