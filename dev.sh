@@ -2,14 +2,16 @@
 
 FILE_TO_WATCH=${1:-"*.json *.scss *.jsx *.js"}
 INITIAL_COMMAND_TO_RUN=${2:-"npm run start"}
+MAX_FILE_SIZE_KB=${3:-200}
 
 echo """
 # dev.sh #####################################################################
 curl -s -- https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/dev.sh | bash -s --
-curl -s -- https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/dev.sh | bash -s -- '*.json *.scss *.jsx *.js' 'npm run start'
+curl -s -- https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/dev.sh | bash -s -- '*.json *.scss *.jsx *.js' 'npm run start' '100'
 ==============================================================================
 FILE_TO_WATCH:          $FILE_TO_WATCH
 INITIAL_COMMAND_TO_RUN: $INITIAL_COMMAND_TO_RUN
+MAX_FILE_SIZE_KB:       ${MAX_FILE_SIZE_KB}kb
 ##############################################################################
 """
 
@@ -50,7 +52,7 @@ $dir"
   done
 
   find . $FIND_IGNORE_ARGS \
-    -type f \( $FIND_NAME_ARGS \) \
+    -type f -size -${MAX_FILE_SIZE_KB}k \( $FIND_NAME_ARGS \) \
     -exec $STAT_CMD {} \; 2>/dev/null | sort
 }
 
