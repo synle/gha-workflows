@@ -11,6 +11,17 @@ INITIAL_COMMAND_TO_RUN: $INITIAL_COMMAND_TO_RUN
 ##############################################################################
 """
 
+IGNORED_PATHS=(
+  ".cache"
+  ".git"
+  ".next"
+  ".venv"
+  "build"
+  "dist"
+  "node_modules"
+  "target"
+  "venv"
+)
 get_file_state() {
   FIND_NAME_ARGS=""
   for pattern in $FILE_TO_WATCH; do
@@ -34,26 +45,14 @@ $dir"
     -exec $STAT_CMD {} \; 2>/dev/null | sort
 }
 
-IGNORED_PATHS=(
-  "node_modules"
-  ".git"
-  "dist"
-  "build"
-  ".next"
-  ".cache"
-  "venv"
-  ".venv"
-  "target"
-)
-
 if stat -c "%Y %n" /dev/null > /dev/null 2>&1; then
   STAT_CMD="stat -c %Y_%n"
 else
   STAT_CMD="stat -f %m_%N"
 fi
 
-npm i
-sh build.sh
+echo '>> npm install' && npm i >/dev/null 2>&1
+echo '>> build.sh' && bash build.sh >/dev/null 2>&1
 
 eval "$INITIAL_COMMAND_TO_RUN" > /dev/null 2>&1 &
 APP_PID=$!
@@ -66,8 +65,8 @@ while sleep 3; do
   CURRENT_STATE=$(get_file_state)
 
   if [ "$CURRENT_STATE" != "$LAST_STATE" ]; then
-    echo "Change detected! Running build.sh..."
-    sh build.sh
+    echo "$(date '+%H:%M:%S') Change detected! Running build.sh..."
+    echo '>> build.sh' && bash build.sh >/dev/null 2>&1
     LAST_STATE="$CURRENT_STATE"
   fi
 done
