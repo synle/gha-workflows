@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 FILE_TO_WATCH=${1:-"*.json *.scss *.jsx *.js"}
 INITIAL_COMMAND_TO_RUN=${2:-"npm run start"}
 
@@ -22,6 +24,13 @@ IGNORED_PATHS=(
   "target"
   "venv"
 )
+
+if stat -c "%Y %n" /dev/null > /dev/null 2>&1; then
+  STAT_CMD="stat -c %Y_%n"
+else
+  STAT_CMD="stat -f %m_%N"
+fi
+
 get_file_state() {
   FIND_NAME_ARGS=""
   for pattern in $FILE_TO_WATCH; do
@@ -45,16 +54,10 @@ $dir"
     -exec $STAT_CMD {} \; 2>/dev/null | sort
 }
 
-if stat -c "%Y %n" /dev/null > /dev/null 2>&1; then
-  STAT_CMD="stat -c %Y_%n"
-else
-  STAT_CMD="stat -f %m_%N"
-fi
-
 echo '>> npm install' && npm i >/dev/null 2>&1
 echo '>> build.sh' && bash build.sh >/dev/null 2>&1
 
-eval "$INITIAL_COMMAND_TO_RUN" > /dev/null 2>&1 &
+eval "$INITIAL_COMMAND_TO_RUN" &
 APP_PID=$!
 
 trap "kill $APP_PID 2>/dev/null" EXIT
