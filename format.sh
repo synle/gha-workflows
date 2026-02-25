@@ -12,12 +12,12 @@ FORMAT_COMMAND_TO_RUN: $FORMAT_COMMAND_TO_RUN
 #######################################################################################################################
 """
 
-# NOTE: refer to https://github.com/synle/bashrc/blob/master/.build/format for the latest
+# NOTE: for the latest, refer to https://github.com/synle/bashrc/blob/master/.build/format 
+
 # ----------------------------------------------------
 # Light Cleanup (depth limited)
 # ----------------------------------------------------
-function format_cleanup_light {
-
+format_cleanup_light {
   local base_dir="${1:-.}"
   local max_depth=6
 
@@ -29,20 +29,25 @@ function format_cleanup_light {
     -maxdepth "$max_depth" \
     \( \
       -type f \( \
-        -name '*.Identifier' -o \
         -name '._*' -o \
-        -name '.DS_Store' -o \
         -name '.AppleDouble' -o \
+        -name '.DS_Store' -o \
         -name '.LSOverride' -o \
-        -name 'Icon?' \
+        -name '*.Identifier' -o \
+        -name '*.orig' -o \
+        -name '*.rej' -o \
+        -name 'Desktop.ini' -o \
+        -name 'ehthumbs.db' -o \
+        -name 'Icon?' -o \
+        -name 'Thumbs.db' \
       \) -o \
       -type d \( \
         -name '.Spotlight-V100' -o \
         -name '.Trashes' -o \
-        -name '.fseventsd' \
+        -name '.fseventsd' -o \
+        -name '__MACOSX' \
       \) \
     \) \
-    -not -path '*/__pycache__/*' \
     -not -path '*/.cache/*' \
     -not -path '*/.ebextensions/*' \
     -not -path '*/.generated/*' \
@@ -51,48 +56,74 @@ function format_cleanup_light {
     -not -path '*/.hg/*' \
     -not -path '*/.idea/*' \
     -not -path '*/.mypy_cache/*' \
+    -not -path '*/.next/*' \
     -not -path '*/.pytest_cache/*' \
     -not -path '*/.sass-cache/*' \
     -not -path '*/.svn/*' \
+    -not -path '*/.venv/*' \
+    -not -path '*/CVS/*' \
+    -not -path '*/__pycache*/*' \
+    -not -path '*/__pycache__/*' \
     -not -path '*/bower_components/*' \
     -not -path '*/build/*' \
     -not -path '*/coverage/*' \
-    -not -path '*/CVS/*' \
     -not -path '*/dist/*' \
+    -not -path '*/env/*' \
     -not -path '*/node_modules/*' \
+    -not -path '*/target/*' \
     -not -path '*/tmp/*' \
+    -not -path '*/vendor/*' \
     -not -path '*/venv/*' \
     -not -path '*/webpack-dist/*' \
     -exec rm -rf {} +
 }
 
-
 # ----------------------------------------------------
-# Text File Formatting
+# Text File Formatting (trim trailing whitespace)
 # ----------------------------------------------------
-function format_other_text_based_files {
+format_other_text_based_files {
   echo '>> Formatting text-based files...'
 
   EXCLUDE_DIRS=(
-    ".git"
-    "node_modules"
-    "dist"
-    "build"
-    "vendor"
     ".cache"
+    ".ebextensions"
+    ".generated"
+    ".git"
+    ".gradle"
+    ".hg"
+    ".idea"
+    ".mypy_cache"
     ".next"
-    "venv"
+    ".pytest_cache"
+    ".sass-cache"
+    ".svn"
     ".venv"
+    "CVS"
+    "__pycache*"
+    "__pycache__"
+    "bower_components"
+    "build"
+    "coverage"
+    "dist"
+    "env"
+    "node_modules"
     "target"
+    "tmp"
+    "vendor"
+    "venv"
+    "webpack-dist"
   )
 
   EXCLUDE_FILES=(
-    "package-lock.json"
-    "yarn.lock"
-    "pnpm-lock.yaml"
-    "*.min.js"
+    "*.Identifier"
     "*.min.css"
+    "*.min.js"
+    "*.orig"
+    "*.rej"
     ".DS_Store"
+    "package-lock.json"
+    "pnpm-lock.yaml"
+    "yarn.lock"
   )
 
   dir_args=()
@@ -116,6 +147,7 @@ function format_other_text_based_files {
 
   echo '>> DONE Formatting All Text-Based Files'
 }
+
 
 
 ############################################
