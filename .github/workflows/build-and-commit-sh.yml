@@ -63,32 +63,46 @@ jobs:
             echo "⏭️ Skipping. No package.json found."
           fi
 
-      - name: Build with build.sh
+      - name: Build
         run: |
-          if [ -f build.sh ]; then
+          if [ -f Makefile ]; then
+            echo "::group::🔨 Running make build @ $(date '+%Y-%m-%d %H:%M:%S')"
+            make build
+            echo "::endgroup::"
+          elif [ -f build.sh ]; then
             echo "::group::🔨 Running build.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
             bash build.sh
             echo "::endgroup::"
           else
-            echo "⏭️ Skipping build.sh (not found)"
+            echo "⏭️ Skipping build (no Makefile or build.sh found)"
           fi
 
-      - name: Test with test.sh
+      - name: Test
         run: |
-          if [ -f test.sh ]; then
+          if [ -f Makefile ]; then
+            echo "::group::🧪 Running make test @ $(date '+%Y-%m-%d %H:%M:%S')"
+            make test
+            echo "::endgroup::"
+          elif [ -f test.sh ]; then
             echo "::group::🧪 Running test.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
             bash test.sh
             echo "::endgroup::"
           else
-            echo "⏭️ Skipping test.sh (not found)"
+            echo "⏭️ Skipping test (no Makefile or test.sh found)"
           fi
 
       - name: Format Code
         continue-on-error: true
         run: |
-          echo "::group::✨ Running format.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
-          curl -s -- https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/format.sh | bash -s --
-          echo "::endgroup::"
+          if [ -f Makefile ]; then
+            echo "::group::✨ Running make format @ $(date '+%Y-%m-%d %H:%M:%S')"
+            make format
+            echo "::endgroup::"
+          else
+            echo "::group::✨ Running format.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
+            curl -s -- https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/format.sh | bash -s --
+            echo "::endgroup::"
+          fi
 
       - name: Check for Meaningful Changes
         id: check-changes
