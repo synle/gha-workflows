@@ -18,6 +18,11 @@ on:
         type: string
         required: false
         default: "^dist/sw.*\\.js$"
+      deploy-to-pages:
+        description: "Deploy to GitHub Pages after build (only on push to main/master)"
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   build:
@@ -25,6 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pages: write
+      id-token: write
 
     env:
       is_os_darwin_mac: 0
@@ -132,3 +139,14 @@ jobs:
         run: |
           echo "Changes were committed. Exiting early to re-trigger the workflow with updated code."
           exit 1
+
+      - name: Upload Pages artifact
+        if: inputs.deploy-to-pages && github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        if: inputs.deploy-to-pages && github.event_name == 'push'
+        id: deployment
+        uses: actions/deploy-pages@v4
