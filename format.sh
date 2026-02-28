@@ -1,7 +1,32 @@
 # $1 default format command to use
+# $2 timeout in seconds (default 20)
 FORMAT_COMMAND_TO_RUN=${1:-"npm run format"}
+FORMAT_TIMEOUT=${2:-20}
 
-echo '>> Formatting All Text-Based Files...'
+# available format steps (whitelist)
+AVAILABLE_FORMAT_STEPS=(
+  "format_cleanup"
+  "format_cleanup_light"
+  "format_other_text_based_files"
+  "format_python"
+  "format_js"
+)
+
+# default format steps order
+DEFAULT_FORMAT_STEPS=(
+  "format_cleanup_light"
+  "format_other_text_based_files"
+  "format_python"
+  "format_js"
+)
+
+# use passed-in steps (remaining args after $1 and $2) or fall back to defaults
+shift 2 2>/dev/null || shift 2>/dev/null || true
+if [ $# -gt 0 ]; then
+  FORMAT_STEPS=("$@")
+else
+  FORMAT_STEPS=("${DEFAULT_FORMAT_STEPS[@]}")
+fi
 
 echo """
 # format.sh ###########################################################################################################
@@ -9,147 +34,35 @@ curl -s -- https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/
 curl -s -- https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/format.sh | bash -s -- "npm run format"
 =======================================================================================================================
 FORMAT_COMMAND_TO_RUN: $FORMAT_COMMAND_TO_RUN
+FORMAT_TIMEOUT: $FORMAT_TIMEOUT
+FORMAT_STEPS: ${FORMAT_STEPS[*]}
 #######################################################################################################################
 """
 
-# NOTE: for the latest, refer to https://github.com/synle/bashrc/blob/master/.build/format 
+# source the format functions from bashrc repo
+source <(curl -s https://raw.githubusercontent.com/synle/bashrc/refs/heads/master/.build/format.sh)
 
-# ----------------------------------------------------
-# Light Cleanup (depth limited)
-# ----------------------------------------------------
-format_cleanup_light {
-  local base_dir="${1:-.}"
-  local max_depth=6
+# run formatting steps
+for step in "${FORMAT_STEPS[@]}"; do
+  # validate step is in the available list
+  is_valid=false
+  for available in "${AVAILABLE_FORMAT_STEPS[@]}"; do
+    if [ "$step" = "$available" ]; then
+      is_valid=true
+      break
+    fi
+  done
 
-  if [ ! -d "$base_dir" ]; then
-    return 1
+  if [ "$is_valid" = false ]; then
+    echo ">> Skipping unknown format step: $step"
+    continue
   fi
 
-  find "$base_dir" \
-    -maxdepth "$max_depth" \
-    \( \
-      -type f \( \
-        -name '._*' -o \
-        -name '.AppleDouble' -o \
-        -name '.DS_Store' -o \
-        -name '.LSOverride' -o \
-        -name '*.Identifier' -o \
-        -name '*.orig' -o \
-        -name '*.rej' -o \
-        -name 'Desktop.ini' -o \
-        -name 'ehthumbs.db' -o \
-        -name 'Icon?' -o \
-        -name 'Thumbs.db' \
-      \) -o \
-      -type d \( \
-        -name '.Spotlight-V100' -o \
-        -name '.Trashes' -o \
-        -name '.fseventsd' -o \
-        -name '__MACOSX' \
-      \) \
-    \) \
-    -not -path '*/.cache/*' \
-    -not -path '*/.ebextensions/*' \
-    -not -path '*/.generated/*' \
-    -not -path '*/.git/*' \
-    -not -path '*/.gradle/*' \
-    -not -path '*/.hg/*' \
-    -not -path '*/.idea/*' \
-    -not -path '*/.mypy_cache/*' \
-    -not -path '*/.next/*' \
-    -not -path '*/.pytest_cache/*' \
-    -not -path '*/.sass-cache/*' \
-    -not -path '*/.svn/*' \
-    -not -path '*/.venv/*' \
-    -not -path '*/CVS/*' \
-    -not -path '*/__pycache*/*' \
-    -not -path '*/__pycache__/*' \
-    -not -path '*/bower_components/*' \
-    -not -path '*/build/*' \
-    -not -path '*/coverage/*' \
-    -not -path '*/dist/*' \
-    -not -path '*/env/*' \
-    -not -path '*/node_modules/*' \
-    -not -path '*/target/*' \
-    -not -path '*/tmp/*' \
-    -not -path '*/vendor/*' \
-    -not -path '*/venv/*' \
-    -not -path '*/webpack-dist/*' \
-    -exec rm -rf {} +
-}
+  timeout $FORMAT_TIMEOUT bash -c "$step" || echo "$step failed or skipped."
+done
+echo "All formatting steps complete (some may have warnings)."
 
-# ----------------------------------------------------
-# Text File Formatting (trim trailing whitespace)
-# ----------------------------------------------------
-format_other_text_based_files {
-  echo '>> Formatting text-based files...'
-
-  EXCLUDE_DIRS=(
-    ".cache"
-    ".ebextensions"
-    ".generated"
-    ".git"
-    ".gradle"
-    ".hg"
-    ".idea"
-    ".mypy_cache"
-    ".next"
-    ".pytest_cache"
-    ".sass-cache"
-    ".svn"
-    ".venv"
-    "CVS"
-    "__pycache*"
-    "__pycache__"
-    "bower_components"
-    "build"
-    "coverage"
-    "dist"
-    "env"
-    "node_modules"
-    "target"
-    "tmp"
-    "vendor"
-    "venv"
-    "webpack-dist"
-  )
-
-  EXCLUDE_FILES=(
-    "*.Identifier"
-    "*.min.css"
-    "*.min.js"
-    "*.orig"
-    "*.rej"
-    ".DS_Store"
-    "package-lock.json"
-    "pnpm-lock.yaml"
-    "yarn.lock"
-  )
-
-  dir_args=()
-  for i in "${!EXCLUDE_DIRS[@]}"; do
-    dir_args+=("-name" "${EXCLUDE_DIRS[$i]}")
-    [ $i -lt $((${#EXCLUDE_DIRS[@]} - 1)) ] && dir_args+=("-o")
-  done
-
-  file_exclude_args=()
-  for i in "${!EXCLUDE_FILES[@]}"; do
-    file_exclude_args+=("-name" "${EXCLUDE_FILES[$i]}")
-    [ $i -lt $((${#EXCLUDE_FILES[@]} - 1)) ] && file_exclude_args+=("-o")
-  done
-
-  find . -type d \( "${dir_args[@]}" \) -prune -o     -type f ! \( "${file_exclude_args[@]}" \) -print |     while read -r file; do
-
-      if file --mime-type "$file" | grep -q "text/"; then
-        sed -i 's/[ \t]*$//' "$file"
-      fi
-    done
-
-  echo '>> DONE Formatting All Text-Based Files'
-}
-
-
-
-############################################
-format_cleanup_light
-format_other_text_based_files
+# run the custom format command
+echo ">> Running custom format command: $FORMAT_COMMAND_TO_RUN"
+timeout $FORMAT_TIMEOUT $FORMAT_COMMAND_TO_RUN
+echo ">> Format completed successfully."
