@@ -39,6 +39,7 @@ jobs:
           node-version: ${{ inputs.node-version }}
 
       - name: Format Code with Prettier
+        shell: bash
         run: |
           echo "::group::✨ Running prettier @ $(date '+%Y-%m-%d %H:%M:%S')"
           npx prettier --write **/*.{html,md}
@@ -46,6 +47,7 @@ jobs:
 
       - name: Check for Meaningful Changes
         id: check-changes
+        shell: bash
         run: |
           changed_files=$(git diff --name-only && git diff --name-only --cached && git ls-files --others --exclude-standard)
           meaningful_files=$(echo "$changed_files" | grep -v '^$' | grep -v -E '${{ inputs.ignore-commit-pattern }}' || true)

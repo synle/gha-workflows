@@ -40,24 +40,28 @@ jobs:
           cache: "yarn"
 
       - name: Install Dependencies
+        shell: bash
         run: |
           echo "::group::🚀 Running yarn install @ $(date '+%Y-%m-%d %H:%M:%S')"
           yarn install --network-timeout 1000000 --frozen-lockfile
           echo "::endgroup::"
 
       - name: Format Code
+        shell: bash
         run: |
           echo "::group::✨ Running yarn format @ $(date '+%Y-%m-%d %H:%M:%S')"
           yarn format
           echo "::endgroup::"
 
       - name: Run Tests
+        shell: bash
         run: |
           echo "::group::🧪 Running yarn test-ci @ $(date '+%Y-%m-%d %H:%M:%S')"
           yarn test-ci
           echo "::endgroup::"
 
       - name: Build
+        shell: bash
         run: |
           echo "::group::🔨 Running yarn build @ $(date '+%Y-%m-%d %H:%M:%S')"
           yarn build
@@ -65,6 +69,7 @@ jobs:
 
       - name: Check for Meaningful Changes
         id: check-changes
+        shell: bash
         run: |
           changed_files=$(git diff --name-only && git diff --name-only --cached && git ls-files --others --exclude-standard)
           meaningful_files=$(echo "$changed_files" | grep -v '^$' | grep -v -E '${{ inputs.ignore-commit-pattern }}' || true)

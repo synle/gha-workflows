@@ -44,6 +44,7 @@ jobs:
           node-version: ${{ inputs.node-version }}
 
       - name: Format Code
+        shell: bash
         run: |
           if [ "${{ inputs.use-default-format-script }}" = "true" ]; then
             echo "::group::✨ Running default format.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
@@ -63,6 +64,7 @@ jobs:
 
       - name: Check for Meaningful Changes
         id: check-changes
+        shell: bash
         run: |
           changed_files=$(git diff --name-only && git diff --name-only --cached && git ls-files --others --exclude-standard)
           meaningful_files=$(echo "$changed_files" | grep -v '^$' | grep -v -E '${{ inputs.ignore-commit-pattern }}' || true)
