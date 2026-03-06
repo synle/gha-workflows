@@ -16,6 +16,8 @@ jobs:
     uses: synle/gha-workflows/.github/workflows/build-and-commit-sh.yml@main
     permissions:
       contents: write
+      pages: write
+      id-token: write
     with:
       node-version: "24.x"
       early-exit-on-commit: false
