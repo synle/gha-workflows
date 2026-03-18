@@ -42,7 +42,7 @@ jobs:
         shell: bash
         run: |
           echo "::group::✨ Running prettier @ $(date '+%Y-%m-%d %H:%M:%S')"
-          npx prettier --write **/*.{html,md}
+          npx --yes prettier --write **/*.{html,md}
           echo "::endgroup::"
 
       - name: Check for Meaningful Changes

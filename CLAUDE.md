@@ -31,7 +31,7 @@ All `*.yml` files are reusable workflows triggered via `workflow_call`. Each has
 |---|---|
 | `build-and-commit-sh.yml` | Full Node.js CI: install deps, `make build` or `build.sh`, format, commit artifacts, optionally test and deploy to GitHub Pages |
 | `pr-make-format.yml` | Format-only: runs `make format`, `npm run format`, or remote `format.sh`, then commits |
-| `pr-format-and-commit-code.yml` | Lightweight: runs `npx prettier --write` on HTML/MD files, then commits |
+| `pr-format-and-commit-code.yml` | Lightweight: runs `npx --yes prettier --write` on HTML/MD files, then commits |
 | `pr-js-yarn.yml` | Yarn-based: `yarn install`, format, test-ci, build, commit |
 | `pr-js-yarn-16.yml` / `pr-js-yarn-16-v2.yml` | Yarn variants for Node 16 |
 

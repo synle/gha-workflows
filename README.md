@@ -8,7 +8,7 @@ Reusable GitHub Actions workflows for CI/CD. Call them from any repo via `workfl
 | --- | --- |
 | [`build-and-commit-sh.yml`](.github/workflows/build-and-commit-sh.yml) | Node.js CI: install deps, build (`make build` or `build.sh`), format, commit artifacts, optionally test and deploy to GitHub Pages |
 | [`pr-make-format.yml`](.github/workflows/pr-make-format.yml) | Run `make format`, `npm run format`, or remote `format.sh`, then commit |
-| [`pr-format-and-commit-code.yml`](.github/workflows/pr-format-and-commit-code.yml) | Lightweight: run `npx prettier --write` on HTML/MD files, then commit |
+| [`pr-format-and-commit-code.yml`](.github/workflows/pr-format-and-commit-code.yml) | Lightweight: run `npx --yes prettier --write` on HTML/MD files, then commit |
 | [`pr-js-yarn.yml`](.github/workflows/pr-js-yarn.yml) | Yarn-based: install, format, test, build, commit |
 | [`pr-js-yarn-16.yml`](.github/workflows/pr-js-yarn-16.yml) / [`pr-js-yarn-16-v2.yml`](.github/workflows/pr-js-yarn-16-v2.yml) | Yarn variants pinned to Node 16 |
 
