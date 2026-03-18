@@ -6,8 +6,8 @@ MAX_FILE_SIZE_KB=${3:-200}
 
 echo """
 # dev.sh #####################################################################
-curl -s -- https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/dev.sh | bash -s --
-curl -s -- https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/dev.sh | bash -s -- '*.json *.scss *.jsx *.js' 'npm run start' '100'
+curl -fsSL https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/dev.sh | bash
+curl -fsSL https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/dev.sh | bash -s -- '*.json *.scss *.jsx *.js' 'npm run start' '100'
 ==============================================================================
 FILE_TO_WATCH:          $FILE_TO_WATCH
 INITIAL_COMMAND_TO_RUN: $INITIAL_COMMAND_TO_RUN
@@ -33,7 +33,7 @@ else
   STAT_CMD="stat -f %m_%N"
 fi
 
-get_file_state() {
+function get_file_state() {
   FIND_NAME_ARGS=""
   for pattern in $FILE_TO_WATCH; do
     [ -n "$FIND_NAME_ARGS" ] && FIND_NAME_ARGS="$FIND_NAME_ARGS -o"

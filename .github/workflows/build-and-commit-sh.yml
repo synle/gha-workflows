@@ -96,7 +96,7 @@ jobs:
             echo "::endgroup::"
           else
             echo "::group::✨ Running format.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
-            curl -fsSL -- https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/format.sh | bash -s --
+            curl -fsSL https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/format.sh | bash
             echo "::endgroup::"
           fi
 
