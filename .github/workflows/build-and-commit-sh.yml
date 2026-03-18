@@ -86,21 +86,6 @@ jobs:
             echo "⏭️ Skipping build (no Makefile or build.sh found)"
           fi
 
-      - name: Test
-        shell: bash
-        run: |
-          if [ -f Makefile ]; then
-            echo "::group::🧪 Running make test @ $(date '+%Y-%m-%d %H:%M:%S')"
-            make test
-            echo "::endgroup::"
-          elif [ -f test.sh ]; then
-            echo "::group::🧪 Running test.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
-            bash test.sh
-            echo "::endgroup::"
-          else
-            echo "⏭️ Skipping test (no Makefile or test.sh found)"
-          fi
-
       - name: Format Code
         continue-on-error: true
         shell: bash
@@ -111,7 +96,7 @@ jobs:
             echo "::endgroup::"
           else
             echo "::group::✨ Running format.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
-            curl -s -- https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/format.sh | bash -s --
+            curl -fsSL -- https://raw.githubusercontent.com/synle/gha-workflow/refs/heads/main/format.sh | bash -s --
             echo "::endgroup::"
           fi
 
@@ -138,6 +123,21 @@ jobs:
         with:
           message: "CI / CD - Build artifacts and format code"
           default_author: github_actions
+
+      - name: Test
+        shell: bash
+        run: |
+          if [ -f Makefile ]; then
+            echo "::group::🧪 Running make test @ $(date '+%Y-%m-%d %H:%M:%S')"
+            make test
+            echo "::endgroup::"
+          elif [ -f test.sh ]; then
+            echo "::group::🧪 Running test.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
+            bash test.sh
+            echo "::endgroup::"
+          else
+            echo "⏭️ Skipping test (no Makefile or test.sh found)"
+          fi
 
       - name: Early Exit on Commit
         if: inputs.early-exit-on-commit && steps.commit.outputs.committed == 'true'
