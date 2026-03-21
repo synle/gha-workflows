@@ -49,6 +49,7 @@ jobs:
           ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Setup Node.js
+        id: setup-node
         continue-on-error: true
         uses: actions/setup-node@v4
         with:
@@ -56,6 +57,7 @@ jobs:
           cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
 
       - name: Install Dependencies
+        id: install-deps
         continue-on-error: true
         shell: bash
         run: |
@@ -72,6 +74,7 @@ jobs:
           fi
 
       - name: Build
+        id: build
         shell: bash
         run: |
           if [ -f Makefile ]; then
@@ -87,6 +90,7 @@ jobs:
           fi
 
       - name: Format Code
+        id: format
         continue-on-error: true
         shell: bash
         run: |
@@ -125,6 +129,8 @@ jobs:
           default_author: github_actions
 
       - name: Test
+        id: test
+        continue-on-error: true
         shell: bash
         run: |
           if [ -f Makefile ]; then
@@ -156,3 +162,27 @@ jobs:
         if: inputs.deploy-to-pages && github.event_name == 'push'
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Job Summary
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          function get_status_icon() {
+            case "$1" in
+              success)  echo ":white_check_mark: Passed" ;;
+              failure)  echo ":x: Failed" ;;
+              skipped)  echo ":fast_forward: Skipped" ;;
+              *)        echo ":grey_question: Unknown" ;;
+            esac
+          }
+
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Setup Node.js | $(get_status_icon '${{ steps.setup-node.outcome }}') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Install Dependencies | $(get_status_icon '${{ steps.install-deps.outcome }}') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | $(get_status_icon '${{ steps.build.outcome }}') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Format Code | $(get_status_icon '${{ steps.format.outcome }}') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit Changes | $(get_status_icon '${{ steps.commit.outcome }}') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test | $(get_status_icon '${{ steps.test.outcome }}') |" >> $GITHUB_STEP_SUMMARY
