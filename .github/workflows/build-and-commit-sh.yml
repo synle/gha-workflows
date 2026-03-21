@@ -1,3 +1,15 @@
+# Common Build and Commit with NodeJS and Build.sh
+#
+# Full Node.js CI pipeline: install deps, build, format, commit artifacts, test,
+# and optionally deploy to GitHub Pages.
+#
+# Each step uses a priority-based detection to find the right command:
+#   Build:  Makefile → build.sh → npm run build (from package.json) → skip
+#   Format: Makefile → npm run format (from package.json) → remote format.sh fallback
+#   Test:   Makefile → test.sh → npm run test-ci → npm run test:ci → npm run test → skip
+#
+# Produces a Job Summary table at the end showing pass/fail/skip status for each step.
+
 name: Common Build and Commit with NodeJS and Build.sh
 
 on:
@@ -85,8 +97,12 @@ jobs:
             echo "::group::🔨 Running build.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
             bash build.sh
             echo "::endgroup::"
+          elif [ -f package.json ] && node -e "const p=require('./package.json'); process.exit(p.scripts && p.scripts.build ? 0 : 1)"; then
+            echo "::group::🔨 Running npm run build @ $(date '+%Y-%m-%d %H:%M:%S')"
+            npm run build
+            echo "::endgroup::"
           else
-            echo "⏭️ Skipping build (no Makefile or build.sh found)"
+            echo "⏭️ Skipping build (no Makefile, build.sh, or npm build script found)"
           fi
 
       - name: Format Code
@@ -97,6 +113,10 @@ jobs:
           if [ -f Makefile ]; then
             echo "::group::✨ Running make format @ $(date '+%Y-%m-%d %H:%M:%S')"
             make format
+            echo "::endgroup::"
+          elif [ -f package.json ] && node -e "const p=require('./package.json'); process.exit(p.scripts && p.scripts.format ? 0 : 1)"; then
+            echo "::group::✨ Running npm run format @ $(date '+%Y-%m-%d %H:%M:%S')"
+            npm run format
             echo "::endgroup::"
           else
             echo "::group::✨ Running format.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
@@ -141,8 +161,24 @@ jobs:
             echo "::group::🧪 Running test.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
             bash test.sh
             echo "::endgroup::"
+          elif [ -f package.json ]; then
+            TEST_SCRIPT=""
+            if node -e "const p=require('./package.json'); process.exit(p.scripts && p.scripts['test-ci'] ? 0 : 1)"; then
+              TEST_SCRIPT="test-ci"
+            elif node -e "const p=require('./package.json'); process.exit(p.scripts && p.scripts['test:ci'] ? 0 : 1)"; then
+              TEST_SCRIPT="test:ci"
+            elif node -e "const p=require('./package.json'); process.exit(p.scripts && p.scripts['test'] ? 0 : 1)"; then
+              TEST_SCRIPT="test"
+            fi
+            if [ -n "$TEST_SCRIPT" ]; then
+              echo "::group::🧪 Running npm run $TEST_SCRIPT @ $(date '+%Y-%m-%d %H:%M:%S')"
+              npm run "$TEST_SCRIPT"
+              echo "::endgroup::"
+            else
+              echo "⏭️ Skipping test (no test script found in package.json)"
+            fi
           else
-            echo "⏭️ Skipping test (no Makefile or test.sh found)"
+            echo "⏭️ Skipping test (no Makefile, test.sh, or package.json found)"
           fi
 
       - name: Early Exit on Commit
