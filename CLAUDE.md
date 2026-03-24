@@ -11,6 +11,7 @@ Reusable GitHub Actions workflows repository (`synle/gha-workflows`). Provides s
 - **Always use `curl -fsSL` for curl commands.** Standard curl flag convention across all scripts.
 - **Bash functions must use the `function` keyword**: Write `function foo() {` not `foo() {`.
 - **Always run `bash format.sh` after making changes.**
+- **URLs must use `synle/gha-workflows/`** (plural). The repo was renamed from `gha-workflow` to `gha-workflows`. Never use the old `synle/gha-workflow/` URL.
 
 ## Commands
 
