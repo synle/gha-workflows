@@ -4,13 +4,13 @@ Reusable GitHub Actions workflows for CI/CD. Call them from any repo via `workfl
 
 ## Workflows
 
-| Workflow | Purpose |
-| --- | --- |
-| [`build-and-commit-sh.yml`](.github/workflows/build-and-commit-sh.yml) | Node.js CI: install deps, build, format, commit artifacts, test, and optionally deploy to GitHub Pages. See [step detection priority](#build-and-commit-step-detection) below. |
-| [`pr-make-format.yml`](.github/workflows/pr-make-format.yml) | Run `make format`, `npm run format`, or remote `format.sh`, then commit |
-| [`pr-format-and-commit-code.yml`](.github/workflows/pr-format-and-commit-code.yml) | Lightweight: run `npx --yes prettier --write` on HTML/MD files, then commit |
-| [`pr-js-yarn.yml`](.github/workflows/pr-js-yarn.yml) | Yarn-based: install, format, test, build, commit |
-| [`pr-js-yarn-16.yml`](.github/workflows/pr-js-yarn-16.yml) / [`pr-js-yarn-16-v2.yml`](.github/workflows/pr-js-yarn-16-v2.yml) | Yarn variants pinned to Node 16 |
+| Workflow                                                                                                                      | Purpose                                                                                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`build-and-commit-sh.yml`](.github/workflows/build-and-commit-sh.yml)                                                        | Node.js CI: install deps, build, format, commit artifacts, test, and optionally deploy to GitHub Pages. See [step detection priority](#build-and-commit-step-detection) below. |
+| [`pr-make-format.yml`](.github/workflows/pr-make-format.yml)                                                                  | Run `make format`, `npm run format`, or remote `format.sh`, then commit                                                                                                        |
+| [`pr-format-and-commit-code.yml`](.github/workflows/pr-format-and-commit-code.yml)                                            | Lightweight: run `npx --yes prettier --write` on HTML/MD files, then commit                                                                                                    |
+| [`pr-js-yarn.yml`](.github/workflows/pr-js-yarn.yml)                                                                          | Yarn-based: install, format, test, build, commit                                                                                                                               |
+| [`pr-js-yarn-16.yml`](.github/workflows/pr-js-yarn-16.yml) / [`pr-js-yarn-16-v2.yml`](.github/workflows/pr-js-yarn-16-v2.yml) | Yarn variants pinned to Node 16                                                                                                                                                |
 
 ## Usage
 
@@ -46,28 +46,28 @@ See the `*.yml.template` files for more examples.
 
 Most workflows accept:
 
-| Input | Default | Description |
-| --- | --- | --- |
-| `node-version` | `"24.x"` | Node.js version |
-| `os` | `"ubuntu-latest"` | Runner OS |
+| Input                   | Default              | Description                                   |
+| ----------------------- | -------------------- | --------------------------------------------- |
+| `node-version`          | `"24.x"`             | Node.js version                               |
+| `os`                    | `"ubuntu-latest"`    | Runner OS                                     |
 | `ignore-commit-pattern` | `"^dist/sw.*\\.js$"` | Regex for files to exclude from commit checks |
 
 `build-and-commit-sh.yml` also supports:
 
-| Input | Default | Description |
-| --- | --- | --- |
+| Input                  | Default | Description                                                    |
+| ---------------------- | ------- | -------------------------------------------------------------- |
 | `early-exit-on-commit` | `false` | Exit with failure after committing so the workflow re-triggers |
-| `deploy-to-pages` | `false` | Deploy to GitHub Pages after build (push to main/master only) |
+| `deploy-to-pages`      | `false` | Deploy to GitHub Pages after build (push to main/master only)  |
 
 ## Build and Commit Step Detection
 
 `build-and-commit-sh.yml` auto-detects which commands to run for each step using a priority order. It tries each option top-to-bottom and uses the first match:
 
-| Step | Priority |
-| --- | --- |
-| **Build** | `Makefile` → `build.sh` → `npm run build` (if script exists in package.json) → skip |
+| Step       | Priority                                                                                       |
+| ---------- | ---------------------------------------------------------------------------------------------- |
+| **Build**  | `Makefile` → `build.sh` → `npm run build` (if script exists in package.json) → skip            |
 | **Format** | `Makefile` → `npm run format` (if script exists in package.json) → remote `format.sh` fallback |
-| **Test** | `Makefile` → `test.sh` → `npm run test-ci` → `npm run test:ci` → `npm run test` → skip |
+| **Test**   | `Makefile` → `test.sh` → `npm run test-ci` → `npm run test:ci` → `npm run test` → skip         |
 
 A **Job Summary** table is produced at the end of each run showing pass/fail/skip status for every step.
 
