@@ -1,0 +1,91 @@
+# Cleanup PR Artifacts
+#
+# Reusable workflow to delete artifacts when a pull request is closed or merged.
+# GitHub does NOT automatically delete artifacts on PR close — they persist until
+# their retention period expires (default 90 days). This workflow cleans them up
+# immediately to save storage.
+#
+# Triggered by the caller on `pull_request: types: [closed]`. Finds all workflow
+# runs for the PR's head branch and deletes their artifacts.
+#
+# Produces a Job Summary showing how many artifacts were deleted.
+
+name: Cleanup PR Artifacts
+
+on:
+  workflow_call:
+    inputs:
+      delete-runs:
+        description: "Also delete the workflow runs themselves (not just artifacts)"
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  cleanup:
+    name: Cleanup PR Artifacts
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+
+    steps:
+      - name: Delete Artifacts from PR Workflow Runs
+        id: cleanup
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          DELETE_RUNS="${{ inputs.delete-runs }}"
+          ARTIFACT_COUNT=0
+          RUN_COUNT=0
+
+          echo "Cleaning up artifacts for PR #${PR_NUMBER} (branch: ${BRANCH})..."
+
+          RUN_IDS=$(gh run list --repo "${{ github.repository }}" --branch "$BRANCH" --json databaseId --limit 100 -q '.[].databaseId' 2>/dev/null || true)
+
+          if [ -z "$RUN_IDS" ]; then
+            echo "No workflow runs found for branch: ${BRANCH}"
+          else
+            for run_id in $RUN_IDS; do
+              ARTIFACT_IDS=$(gh api "repos/${{ github.repository }}/actions/runs/${run_id}/artifacts" --jq '.artifacts[].id' 2>/dev/null || true)
+              for artifact_id in $ARTIFACT_IDS; do
+                echo "Deleting artifact ${artifact_id} from run ${run_id}"
+                gh api -X DELETE "repos/${{ github.repository }}/actions/artifacts/${artifact_id}" 2>/dev/null || true
+                ARTIFACT_COUNT=$((ARTIFACT_COUNT + 1))
+              done
+
+              if [ "$DELETE_RUNS" = "true" ]; then
+                echo "Deleting workflow run ${run_id}"
+                gh api -X DELETE "repos/${{ github.repository }}/actions/runs/${run_id}" 2>/dev/null || true
+                RUN_COUNT=$((RUN_COUNT + 1))
+              fi
+            done
+          fi
+
+          echo "artifact_count=${ARTIFACT_COUNT}" >> "$GITHUB_OUTPUT"
+          echo "run_count=${RUN_COUNT}" >> "$GITHUB_OUTPUT"
+
+      - name: Job Summary
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          function get_status_icon() {
+            case "$1" in
+              success)  echo ":white_check_mark: Passed" ;;
+              failure)  echo ":x: Failed" ;;
+              skipped)  echo ":fast_forward: Skipped" ;;
+              *)        echo ":grey_question: Unknown" ;;
+            esac
+          }
+
+          echo "## :wastebasket: PR Artifact Cleanup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| PR | **#${{ github.event.pull_request.number }}** |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch | **${{ github.event.pull_request.head.ref }}** |" >> $GITHUB_STEP_SUMMARY
+          echo "| Cleanup | $(get_status_icon '${{ steps.cleanup.outcome }}') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Artifacts Deleted | **${{ steps.cleanup.outputs.artifact_count || 0 }}** |" >> $GITHUB_STEP_SUMMARY
+          echo "| Runs Deleted | **${{ steps.cleanup.outputs.run_count || 0 }}** |" >> $GITHUB_STEP_SUMMARY

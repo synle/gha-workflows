@@ -32,6 +32,7 @@ All `*.yml` files are reusable workflows triggered via `workflow_call`. Each has
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `build-and-commit-sh.yml`                    | Full Node.js CI: install deps, `make build` or `build.sh`, format, commit artifacts, optionally test and deploy to GitHub Pages |
 | `pr-make-format.yml`                         | Format-only: runs `make format`, `npm run format`, or remote `format.sh`, then commits                                          |
+| `cleanup-pr-artifacts.yml`                   | Delete artifacts (and optionally runs) when a PR is closed or merged                                                            |
 | `cleanup-releases.yml`                       | Cleanup GitHub releases: delete old drafts and incomplete releases (missing assets) with dry-run support                        |
 | `pr-format-and-commit-code.yml`              | Lightweight: runs `npx --yes prettier --write` on HTML/MD files, then commits                                                   |
 | `pr-js-yarn.yml`                             | Yarn-based: `yarn install`, format, test-ci, build, commit                                                                      |
