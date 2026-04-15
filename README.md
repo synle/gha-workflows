@@ -7,6 +7,8 @@ Reusable GitHub Actions workflows for CI/CD. Call them from any repo via `workfl
 | Workflow                                                                                                                      | Purpose                                                                                                                                                                        |
 | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [`build-and-commit-sh.yml`](.github/workflows/build-and-commit-sh.yml)                                                        | Node.js CI: install deps, build, format, commit artifacts, test, and optionally deploy to GitHub Pages. See [step detection priority](#build-and-commit-step-detection) below. |
+| [`cleanup-pr-artifacts.yml`](.github/workflows/cleanup-pr-artifacts.yml)                                                      | Delete artifacts (and optionally workflow runs) when a PR is closed or merged                                                                                                  |
+| [`cleanup-releases.yml`](.github/workflows/cleanup-releases.yml)                                                              | Cleanup GitHub releases: delete old drafts and incomplete releases (missing assets) with dry-run support                                                                       |
 | [`pr-make-format.yml`](.github/workflows/pr-make-format.yml)                                                                  | Run `make format`, `npm run format`, or remote `format.sh`, then commit                                                                                                        |
 | [`pr-format-and-commit-code.yml`](.github/workflows/pr-format-and-commit-code.yml)                                            | Lightweight: run `npx --yes prettier --write` on HTML/MD files, then commit                                                                                                    |
 | [`pr-js-yarn.yml`](.github/workflows/pr-js-yarn.yml)                                                                          | Yarn-based: install, format, test, build, commit                                                                                                                               |
@@ -58,6 +60,70 @@ Most workflows accept:
 | ---------------------- | ------- | -------------------------------------------------------------- |
 | `early-exit-on-commit` | `false` | Exit with failure after committing so the workflow re-triggers |
 | `deploy-to-pages`      | `false` | Deploy to GitHub Pages after build (push to main/master only)  |
+
+## Cleanup Workflows
+
+### cleanup-pr-artifacts
+
+Deletes artifacts (and optionally workflow runs) when a PR is closed or merged. GitHub does **not** auto-delete artifacts on PR close — they persist until their retention period expires.
+
+```yaml
+name: cleanup-pr-artifacts
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  cleanup:
+    uses: synle/gha-workflows/.github/workflows/cleanup-pr-artifacts.yml@main
+    permissions:
+      actions: write
+    with:
+      delete-runs: false
+```
+
+| Input         | Default | Description                                                   |
+| ------------- | ------- | ------------------------------------------------------------- |
+| `delete-runs` | `false` | Also delete the workflow runs themselves (not just artifacts) |
+
+### cleanup-releases
+
+Deletes old draft releases and incomplete releases (missing expected assets). Supports dry-run to preview before deleting.
+
+```yaml
+name: cleanup-releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Preview deletions without actually deleting"
+        type: boolean
+        default: true
+
+jobs:
+  cleanup:
+    uses: synle/gha-workflows/.github/workflows/cleanup-releases.yml@main
+    permissions:
+      contents: write
+    with:
+      cleanup-drafts: true
+      draft-keep-count: 0
+      cleanup-incomplete: true
+      expected-assets: 4
+      lookback-months: 3
+      dry-run: ${{ inputs.dry_run || true }}
+```
+
+| Input                | Default | Description                                           |
+| -------------------- | ------- | ----------------------------------------------------- |
+| `cleanup-drafts`     | `true`  | Delete old draft releases                             |
+| `draft-keep-count`   | `0`     | Number of most recent draft releases to keep          |
+| `cleanup-incomplete` | `true`  | Delete incomplete releases (missing assets)           |
+| `expected-assets`    | `4`     | Expected number of assets per release                 |
+| `lookback-months`    | `3`     | How many months back to check for incomplete releases |
+| `dry-run`            | `true`  | Preview deletions without actually deleting           |
 
 ## Build and Commit Step Detection
 
