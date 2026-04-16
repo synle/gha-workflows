@@ -145,8 +145,8 @@ A **Job Summary** table is produced at the end of each run showing pass/fail/ski
 
 ```bash
 # Run format.sh remotely
-curl -fsSL "https://github.com/synle/gha-workflows/blob/head/format.sh?raw=true" | bash
+curl -fsSL "https://github.com/synle/gha-workflows/blob/head/format.sh?raw=1" | bash
 
 # Bootstrap a new Node repo
-curl -fsSL "https://github.com/synle/gha-workflows/blob/head/setup-repo-node.sh?raw=true" | bash
+curl -fsSL "https://github.com/synle/gha-workflows/blob/head/setup-repo-node.sh?raw=1" | bash
 ```
