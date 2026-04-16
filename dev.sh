@@ -6,8 +6,8 @@ MAX_FILE_SIZE_KB=${3:-200}
 
 echo """
 # dev.sh #####################################################################
-curl -fsSL https://raw.githubusercontent.com/synle/gha-workflows/refs/heads/main/dev.sh | bash
-curl -fsSL https://raw.githubusercontent.com/synle/gha-workflows/refs/heads/main/dev.sh | bash -s -- '*.json *.scss *.jsx *.js' 'npm run start' '100'
+curl -fsSL "https://github.com/synle/gha-workflows/blob/head/dev.sh?raw=true" | bash
+curl -fsSL "https://github.com/synle/gha-workflows/blob/head/dev.sh?raw=true" | bash -s -- '*.json *.scss *.jsx *.js' 'npm run start' '100'
 ==============================================================================
 FILE_TO_WATCH:          $FILE_TO_WATCH
 INITIAL_COMMAND_TO_RUN: $INITIAL_COMMAND_TO_RUN

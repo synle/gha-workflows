@@ -53,6 +53,19 @@ Show consumers how to reference each workflow. The pattern is:
 uses: synle/gha-workflows/.github/workflows/<workflow>.yml@main
 ```
 
+## GitHub Raw File URLs
+
+When fetching raw file content from GitHub repos, always use the `?raw=true` blob URL format:
+
+```
+https://github.com/{owner}/{repo}/blob/head/{path}?raw=true
+```
+
+Do NOT use:
+
+- `https://api.github.com/repos/{owner}/{repo}/contents/{path}` (GitHub Contents API)
+- `https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}`
+
 ### Helper Scripts
 
 - **`format.sh`** — Parameterized formatter. Args: `$1` = format command (default `npm run format`), `$2` = timeout in seconds (default 20), remaining args = format steps. Sources the actual format functions from `synle/bashrc` repo's `.build/format.sh` via curl. Available steps: `format_cleanup`, `format_cleanup_light`, `format_other_text_based_files`, `format_python`, `format_js`.

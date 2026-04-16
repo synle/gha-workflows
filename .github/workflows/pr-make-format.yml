@@ -50,7 +50,7 @@ jobs:
         run: |
           if [ "${{ inputs.use-default-format-script }}" = "true" ]; then
             echo "::group::✨ Running default format.sh @ $(date '+%Y-%m-%d %H:%M:%S')"
-            curl -fsSL https://raw.githubusercontent.com/synle/gha-workflows/refs/heads/main/format.sh | bash
+            curl -fsSL "https://github.com/synle/gha-workflows/blob/head/format.sh?raw=true" | bash
             echo "::endgroup::"
           elif [ -f Makefile ] && grep -q '^format:' Makefile; then
             echo "::group::✨ Running make format @ $(date '+%Y-%m-%d %H:%M:%S')"
