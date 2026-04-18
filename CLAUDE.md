@@ -71,3 +71,9 @@ Do NOT use:
 - **`format.sh`** — Parameterized formatter. Args: `$1` = format command (default `npm run format`), `$2` = timeout in seconds (default 20), remaining args = format steps. Sources the actual format functions from `synle/bashrc` repo's `.build/format.sh` via curl. Available steps: `format_cleanup`, `format_cleanup_light`, `format_other_text_based_files`, `format_python`, `format_js`.
 - **`dev.sh`** — File watcher with configurable patterns. Args: `$1` = glob patterns, `$2` = start command, `$3` = max file size KB. Polls every 3 seconds using `find` + `stat`, runs `build.sh` on changes. Cross-platform stat detection (GNU vs BSD).
 - **`setup-repo-node.sh`** — One-shot repo bootstrapper. Sets up `.gitattributes` (LF line endings), `.gitignore`, `.prettierignore`, `dependabot.yml` (monthly npm updates), and adds `prettier` + format script to `package.json`.
+
+
+## Git / PR Merge Policy
+
+- Always use **squash and merge** when merging PRs. Never use merge commits or rebase merges. This keeps the git history clean with one commit per PR.
+- You may `git merge origin/main` or `git merge origin/master` locally to sync branches, but PR merges must always be squash merges.
