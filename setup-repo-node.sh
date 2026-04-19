@@ -1,4 +1,4 @@
-## curl -fsSL "https://github.com/synle/gha-workflows/blob/head/setup-repo-node.sh?raw=1" | bash
+## curl -fsSL "https://github.com/synle/workflows/blob/head/setup-repo-node.sh?raw=1" | bash
 # Initialize configuration files
 echo "* text=auto eol=lf" > .gitattributes
 

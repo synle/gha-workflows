@@ -53,7 +53,7 @@ runs:
 
     - name: Resolve tag
       id: resolve-tag
-      uses: synle/gha-workflows/actions/release/_common/resolve-tag@main
+      uses: synle/workflows/actions/release/_common/resolve-tag@main
       with:
         mode: ${{ inputs.mode }}
         version: ${{ inputs.version }}
@@ -62,7 +62,7 @@ runs:
         version_command: ${{ inputs.version_command }}
 
     - name: Create draft
-      uses: synle/gha-workflows/actions/release/_common/draft@main
+      uses: synle/workflows/actions/release/_common/draft@main
       with:
         tag: ${{ steps.resolve-tag.outputs.tag }}
         project_name: ${{ inputs.project_name }}

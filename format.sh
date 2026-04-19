@@ -30,8 +30,8 @@ fi
 
 echo """
 # format.sh ###########################################################################################################
-curl -fsSL "https://github.com/synle/gha-workflows/blob/head/format.sh?raw=1" | bash
-curl -fsSL "https://github.com/synle/gha-workflows/blob/head/format.sh?raw=1" | bash -s -- "npm run format"
+curl -fsSL "https://github.com/synle/workflows/blob/head/format.sh?raw=1" | bash
+curl -fsSL "https://github.com/synle/workflows/blob/head/format.sh?raw=1" | bash -s -- "npm run format"
 =======================================================================================================================
 FORMAT_COMMAND_TO_RUN: $FORMAT_COMMAND_TO_RUN
 FORMAT_TIMEOUT: $FORMAT_TIMEOUT

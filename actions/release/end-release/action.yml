@@ -45,7 +45,7 @@ runs:
         ref: ${{ inputs.sha || github.sha }}
 
     - name: Generate release notes
-      uses: synle/gha-workflows/actions/release/_common/notes@main
+      uses: synle/workflows/actions/release/_common/notes@main
       with:
         tag: ${{ inputs.tag }}
         project_name: ${{ inputs.project_name }}
@@ -54,7 +54,7 @@ runs:
         extra_body_path: ${{ inputs.extra_body_path }}
 
     - name: Finalize release
-      uses: synle/gha-workflows/actions/release/_common/finalize@main
+      uses: synle/workflows/actions/release/_common/finalize@main
       with:
         tag: ${{ inputs.tag }}
         project_name: ${{ inputs.project_name }}

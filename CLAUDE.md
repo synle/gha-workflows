@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Reusable GitHub Actions workflows and composite actions repository (`synle/gha-workflows`). Provides shared CI/CD workflow templates (`workflow_call`) and composable release actions for other repositories. Also includes helper shell scripts for formatting and dev file-watching.
+Reusable GitHub Actions workflows and composite actions repository (`synle/workflows`). Provides shared CI/CD workflow templates (`workflow_call`) and composable release actions for other repositories. Also includes helper shell scripts for formatting and dev file-watching.
 
 ## Important Rules
 
 - **Always use `curl -fsSL` for curl commands.** Standard curl flag convention across all scripts.
 - **Bash functions must use the `function` keyword**: Write `function foo() {` not `foo() {`.
 - **Always run `bash format.sh` after making changes.**
-- **URLs must use `synle/gha-workflows/`** (plural). The repo was renamed from `gha-workflow` to `gha-workflows`. Never use the old `synle/gha-workflow/` URL.
+- **URLs must use `synle/workflows/`** (plural). The repo was renamed from `gha-workflow` to `gha-workflows`. Never use the old `synle/gha-workflow/` URL.
 
 ## Commands
 
@@ -68,7 +68,7 @@ jobs:
       tag: ${{ steps.pre.outputs.tag }}
       sha: ${{ steps.pre.outputs.sha }}
     steps:
-      - uses: synle/gha-workflows/actions/release/begin-release@main
+      - uses: synle/workflows/actions/release/begin-release@main
         id: pre
         with:
           mode: official  # or beta
@@ -84,7 +84,7 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - uses: synle/gha-workflows/actions/release/end-release@main
+      - uses: synle/workflows/actions/release/end-release@main
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           project_name: my-project
@@ -117,7 +117,7 @@ jobs:
 Show consumers how to reference each workflow. The pattern is:
 
 ```yaml
-uses: synle/gha-workflows/.github/workflows/<workflow>.yml@main
+uses: synle/workflows/.github/workflows/<workflow>.yml@main
 ```
 
 ## GitHub Raw File URLs

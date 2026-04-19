@@ -33,7 +33,7 @@ concurrency:
 
 jobs:
   build:
-    uses: synle/gha-workflows/.github/workflows/build-and-commit-sh.yml@main
+    uses: synle/workflows/.github/workflows/build-and-commit-sh.yml@main
     permissions:
       contents: write
       pages: write
@@ -76,7 +76,7 @@ on:
 
 jobs:
   cleanup:
-    uses: synle/gha-workflows/.github/workflows/cleanup-pr-artifacts.yml@main
+    uses: synle/workflows/.github/workflows/cleanup-pr-artifacts.yml@main
     permissions:
       actions: write
     with:
@@ -104,7 +104,7 @@ on:
 
 jobs:
   cleanup:
-    uses: synle/gha-workflows/.github/workflows/cleanup-releases.yml@main
+    uses: synle/workflows/.github/workflows/cleanup-releases.yml@main
     permissions:
       contents: write
     with:
@@ -145,8 +145,8 @@ A **Job Summary** table is produced at the end of each run showing pass/fail/ski
 
 ```bash
 # Run format.sh remotely
-curl -fsSL "https://github.com/synle/gha-workflows/blob/head/format.sh?raw=1" | bash
+curl -fsSL "https://github.com/synle/workflows/blob/head/format.sh?raw=1" | bash
 
 # Bootstrap a new Node repo
-curl -fsSL "https://github.com/synle/gha-workflows/blob/head/setup-repo-node.sh?raw=1" | bash
+curl -fsSL "https://github.com/synle/workflows/blob/head/setup-repo-node.sh?raw=1" | bash
 ```
