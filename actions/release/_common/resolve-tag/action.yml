@@ -66,12 +66,19 @@ runs:
             VERSION="${INPUT_VERSION#v}"
           elif [ -n "$VERSION_COMMAND" ]; then
             VERSION=$(eval "$VERSION_COMMAND")
-          elif [[ "$VERSION_FILE" == *.toml ]]; then
-            # TOML: extract version from key = "value" format (Cargo.toml, etc.)
-            VERSION=$(grep '^version' "$VERSION_FILE" | head -1 | sed 's/.*"\(.*\)".*/\1/')
           else
-            # JSON: any file with a "version" field (package.json, tauri.conf.json, etc.)
-            VERSION=$(node -e "process.stdout.write(require('./${VERSION_FILE}').version)")
+            # Read version from file: JSON (.json) uses require(), TOML (.toml) uses regex
+            VERSION=$(node -e "
+              const fs = require('fs');
+              const f = './${VERSION_FILE}';
+              const c = fs.readFileSync(f, 'utf-8');
+              if (f.endsWith('.toml')) {
+                const m = c.match(/^version\s*=\s*\"(.+?)\"/m);
+                process.stdout.write(m ? m[1] : '');
+              } else {
+                process.stdout.write(JSON.parse(c).version);
+              }
+            ")
           fi
           TAG="v${VERSION}"
           DATE=""
