@@ -72,9 +72,13 @@ runs:
               const fs = require('fs');
               const f = './${VERSION_FILE}';
               const c = fs.readFileSync(f, 'utf-8');
-              const v = f.endsWith('.toml')
-                ? (c.match(/^version\s*=\s*\"(.+?)\"/m) || [])[1] || ''
-                : JSON.parse(c).version;
+              let v;
+              if (f.endsWith('.toml')) {
+                const m = c.match(/^version\s*=\s*\"(.+?)\"/m);
+                v = m ? m[1] : '';
+              } else {
+                v = JSON.parse(c).version;
+              }
               process.stdout.write(v);
             ")
           fi
