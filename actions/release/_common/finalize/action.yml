@@ -1,0 +1,102 @@
+name: "Release: Finalize"
+description: "Upload assets to the draft release and set final title/flags based on mode and build result."
+
+inputs:
+  tag:
+    description: "The release tag"
+    required: true
+  project_name:
+    description: "Project name for the release title"
+    required: true
+  mode:
+    description: "Release mode: official or beta"
+    required: true
+  build_result:
+    description: "Build job result: success or failure"
+    required: true
+  files:
+    description: "Newline-separated list of asset file paths to upload"
+    required: false
+    default: ""
+  body_path:
+    description: "Path to the release notes markdown file"
+    required: false
+    default: "release-notes.md"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Upload assets
+      if: inputs.build_result == 'success' && inputs.files != ''
+      shell: bash
+      env:
+        TAG: ${{ inputs.tag }}
+        FILES: ${{ inputs.files }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        echo "$FILES" | while IFS= read -r file; do
+          file=$(echo "$file" | xargs) # trim whitespace
+          if [ -n "$file" ] && [ -f "$file" ]; then
+            echo "Uploading: $file"
+            gh release upload "$TAG" "$file" --repo "$GITHUB_REPOSITORY" --clobber
+          elif [ -n "$file" ]; then
+            echo "::warning::File not found: $file"
+          fi
+        done
+
+    - name: Update release body
+      shell: bash
+      env:
+        TAG: ${{ inputs.tag }}
+        BODY_PATH: ${{ inputs.body_path }}
+        BUILD_RESULT: ${{ inputs.build_result }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if [ -f "$BODY_PATH" ]; then
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file "$BODY_PATH"
+        elif [ "$BUILD_RESULT" != "success" ]; then
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --notes "Build failed. See [workflow run](https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}) for details."
+        fi
+
+    - name: Finalize release flags
+      shell: bash
+      env:
+        TAG: ${{ inputs.tag }}
+        PROJECT_NAME: ${{ inputs.project_name }}
+        MODE: ${{ inputs.mode }}
+        BUILD_RESULT: ${{ inputs.build_result }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if [ "$MODE" = "official" ] && [ "$BUILD_RESULT" = "success" ]; then
+          # Official success: publish, not prerelease, make latest
+          TITLE="${PROJECT_NAME} ${TAG}"
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --title "$TITLE" \
+            --draft=false \
+            --prerelease=false \
+            --latest
+        elif [ "$MODE" = "official" ] && [ "$BUILD_RESULT" != "success" ]; then
+          # Official failure: keep as draft, mark error
+          TITLE="${PROJECT_NAME} ${TAG} [Error]"
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --title "$TITLE" \
+            --draft \
+            --prerelease
+        elif [ "$MODE" = "beta" ] && [ "$BUILD_RESULT" = "success" ]; then
+          # Beta success: stay draft, mark success
+          TITLE="${PROJECT_NAME} ${TAG} [Success]"
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --title "$TITLE" \
+            --draft \
+            --prerelease
+        else
+          # Beta failure: stay draft, mark error
+          TITLE="${PROJECT_NAME} ${TAG} [Error]"
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --title "$TITLE" \
+            --draft \
+            --prerelease
+        fi
+
+        echo "Finalized: title='${TITLE}' mode=${MODE} result=${BUILD_RESULT}"

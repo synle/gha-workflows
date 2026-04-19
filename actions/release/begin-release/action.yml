@@ -1,0 +1,68 @@
+name: "Release: Begin"
+description: "Pre-build release setup. Checks out code, resolves the release tag, cleans up any existing release, and creates a draft placeholder."
+
+inputs:
+  mode:
+    description: "Release mode: official or beta"
+    required: true
+  project_name:
+    description: "Project name for the release title (e.g. display-dj)"
+    required: true
+  version:
+    description: "Version override (e.g. 2.0.1). If empty, reads from version_file."
+    required: false
+    default: ""
+  sha:
+    description: "Commit SHA to build from (beta only). Defaults to HEAD."
+    required: false
+    default: ""
+  version_file:
+    description: "File to read version from: package.json or Cargo.toml"
+    required: false
+    default: "package.json"
+  version_command:
+    description: "Custom shell command to extract version. Overrides version_file if set."
+    required: false
+    default: ""
+
+outputs:
+  tag:
+    description: "The resolved release tag"
+    value: ${{ steps.resolve-tag.outputs.tag }}
+  version:
+    description: "The resolved version string"
+    value: ${{ steps.resolve-tag.outputs.version }}
+  sha:
+    description: "The full commit SHA"
+    value: ${{ steps.resolve-tag.outputs.sha }}
+  short_sha:
+    description: "The short commit SHA"
+    value: ${{ steps.resolve-tag.outputs.short_sha }}
+  date:
+    description: "UTC date string used in beta tags"
+    value: ${{ steps.resolve-tag.outputs.date }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: ${{ inputs.sha || github.sha }}
+
+    - name: Resolve tag
+      id: resolve-tag
+      uses: synle/gha-workflows/actions/release/_common/resolve-tag@main
+      with:
+        mode: ${{ inputs.mode }}
+        version: ${{ inputs.version }}
+        sha: ${{ inputs.sha }}
+        version_file: ${{ inputs.version_file }}
+        version_command: ${{ inputs.version_command }}
+
+    - name: Create draft
+      uses: synle/gha-workflows/actions/release/_common/draft@main
+      with:
+        tag: ${{ steps.resolve-tag.outputs.tag }}
+        project_name: ${{ inputs.project_name }}

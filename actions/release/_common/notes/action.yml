@@ -1,0 +1,104 @@
+name: "Release: Generate Notes"
+description: "Generate release notes from git history with optional user notes and extra body content."
+
+inputs:
+  tag:
+    description: "The release tag"
+    required: true
+  project_name:
+    description: "Project name for the release heading (e.g. display-dj)"
+    required: true
+  user_notes:
+    description: "Optional user-provided notes prepended to the changelog"
+    required: false
+    default: ""
+  max_commits:
+    description: "Maximum number of commits to include in the changelog"
+    required: false
+    default: "10"
+  extra_body_path:
+    description: "Optional path to a file whose content is appended after the changelog (e.g. install instructions)"
+    required: false
+    default: ""
+
+outputs:
+  body:
+    description: "The generated release notes markdown"
+    value: ${{ steps.notes.outputs.body }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Generate release notes
+      id: notes
+      shell: bash
+      env:
+        TAG: ${{ inputs.tag }}
+        PROJECT_NAME: ${{ inputs.project_name }}
+        USER_NOTES: ${{ inputs.user_notes }}
+        MAX_COMMITS: ${{ inputs.max_commits }}
+        EXTRA_BODY_PATH: ${{ inputs.extra_body_path }}
+        REPO: ${{ github.repository }}
+      run: |
+        CURRENT_SHA=$(git rev-parse HEAD)
+
+        # Find the previous official release tag (v* only, exclude current tag and beta tags)
+        PREV_TAG=$(git tag --sort=-v:refname | grep '^v' | grep -v "^${TAG}$" | head -1)
+
+        if [ -n "$PREV_TAG" ]; then
+          RANGE="${PREV_TAG}..HEAD"
+          COMMITS=$(git log --oneline --no-decorate -"${MAX_COMMITS}" "$RANGE")
+          TOTAL=$(git rev-list --count "$RANGE")
+          DIFF_RANGE="${PREV_TAG}...${TAG}"
+        else
+          COMMITS=$(git log --oneline --no-decorate -"${MAX_COMMITS}")
+          TOTAL=$(git rev-list --count HEAD)
+          DIFF_RANGE="${CURRENT_SHA}"
+        fi
+
+        {
+          echo "## ${PROJECT_NAME} ${TAG}"
+          echo ""
+
+          # User-provided notes at the top
+          if [ -n "$USER_NOTES" ]; then
+            echo "$USER_NOTES"
+            echo ""
+          fi
+
+          # Changelog
+          echo "### Changes"
+          echo ""
+          echo "$COMMITS" | while IFS= read -r line; do
+            SHA=$(echo "$line" | cut -d' ' -f1)
+            MSG=$(echo "$line" | cut -d' ' -f2-)
+            echo "- [\`${SHA}\`](https://github.com/${REPO}/commit/${SHA}) ${MSG}"
+          done
+          echo ""
+
+          if [ "$TOTAL" -gt "$MAX_COMMITS" ]; then
+            echo "_Showing ${MAX_COMMITS} of ${TOTAL} commits._"
+            echo ""
+          fi
+
+          # Full changelog diff link
+          if [ -n "$PREV_TAG" ]; then
+            echo "[Full changelog](https://github.com/${REPO}/compare/${DIFF_RANGE})"
+            echo ""
+          fi
+
+          # Extra body content (e.g. install instructions, downloads table)
+          if [ -n "$EXTRA_BODY_PATH" ] && [ -f "$EXTRA_BODY_PATH" ]; then
+            echo "---"
+            echo ""
+            cat "$EXTRA_BODY_PATH"
+            echo ""
+          fi
+        } > release-notes.md
+
+        # Output as multiline string
+        {
+          echo "body<<RELEASE_NOTES_EOF"
+          cat release-notes.md
+          echo "RELEASE_NOTES_EOF"
+        } >> "$GITHUB_OUTPUT"

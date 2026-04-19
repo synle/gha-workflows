@@ -1,0 +1,37 @@
+name: "Release: Create Draft"
+description: "Delete any existing release for the tag and create a draft placeholder."
+
+inputs:
+  tag:
+    description: "The release tag"
+    required: true
+  project_name:
+    description: "Project name for the release title (e.g. display-dj)"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Delete existing release and tag
+      shell: bash
+      env:
+        TAG: ${{ inputs.tag }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag 2>/dev/null || true
+        git tag -d "$TAG" 2>/dev/null || true
+
+    - name: Create draft placeholder
+      shell: bash
+      env:
+        TAG: ${{ inputs.tag }}
+        PROJECT_NAME: ${{ inputs.project_name }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh release create "$TAG" \
+          --repo "$GITHUB_REPOSITORY" \
+          --draft \
+          --prerelease \
+          --title "${PROJECT_NAME} ${TAG}" \
+          --notes "Build in progress..." \
+          --target "$(git rev-parse HEAD)"

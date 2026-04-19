@@ -1,0 +1,63 @@
+name: "Release: End"
+description: "Post-build release finalization. Checks out code, generates release notes, uploads assets, and sets final release flags."
+
+inputs:
+  tag:
+    description: "The release tag (from begin-release outputs)"
+    required: true
+  project_name:
+    description: "Project name for the release title"
+    required: true
+  mode:
+    description: "Release mode: official or beta"
+    required: true
+  build_result:
+    description: "Build job result (e.g. needs.build.result): success or failure"
+    required: true
+  sha:
+    description: "Commit SHA to checkout for note generation. Defaults to github.sha."
+    required: false
+    default: ""
+  user_notes:
+    description: "Optional user-provided release notes"
+    required: false
+    default: ""
+  max_commits:
+    description: "Maximum commits in changelog"
+    required: false
+    default: "10"
+  extra_body_path:
+    description: "Optional file to append after changelog (e.g. install instructions)"
+    required: false
+    default: ""
+  files:
+    description: "Newline-separated list of asset file paths to upload"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: ${{ inputs.sha || github.sha }}
+
+    - name: Generate release notes
+      uses: synle/gha-workflows/actions/release/_common/notes@main
+      with:
+        tag: ${{ inputs.tag }}
+        project_name: ${{ inputs.project_name }}
+        user_notes: ${{ inputs.user_notes }}
+        max_commits: ${{ inputs.max_commits }}
+        extra_body_path: ${{ inputs.extra_body_path }}
+
+    - name: Finalize release
+      uses: synle/gha-workflows/actions/release/_common/finalize@main
+      with:
+        tag: ${{ inputs.tag }}
+        project_name: ${{ inputs.project_name }}
+        mode: ${{ inputs.mode }}
+        build_result: ${{ inputs.build_result }}
+        files: ${{ inputs.files }}

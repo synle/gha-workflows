@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Reusable GitHub Actions workflows repository (`synle/gha-workflows`). Provides shared CI/CD workflow templates that other repositories call via `workflow_call`. Also includes helper shell scripts for formatting and dev file-watching.
+Reusable GitHub Actions workflows and composite actions repository (`synle/gha-workflows`). Provides shared CI/CD workflow templates (`workflow_call`) and composable release actions for other repositories. Also includes helper shell scripts for formatting and dev file-watching.
 
 ## Important Rules
 
@@ -37,6 +37,73 @@ All `*.yml` files are reusable workflows triggered via `workflow_call`. Each has
 | `pr-js-yarn.yml`                             | Yarn-based: `yarn install`, format, test-ci, build, commit                                                                      |
 | `pr-js-yarn-16.yml` / `pr-js-yarn-16-v2.yml` | Yarn variants for Node 16                                                                                                       |
 | `pr-make-format.yml`                         | Format-only: runs `make format`, `npm run format`, or remote `format.sh`, then commits                                          |
+
+### Release Composite Actions (`actions/release/`)
+
+Composable actions for GitHub release workflows. Repos keep their own build steps; these actions handle the common release bookkeeping (tag resolution, cleanup, changelog, asset upload, finalize).
+
+**High-level actions** (what repos call directly):
+
+| Action | When | Purpose |
+|--------|------|---------|
+| `actions/release/begin-release` | Before build | Checkout + resolve tag + cleanup old release + create draft placeholder |
+| `actions/release/end-release` | After build | Checkout + generate changelog + upload assets + set final title/flags |
+
+**Low-level actions** (`actions/release/_common/`, called by the high-level actions):
+
+| Action | Purpose |
+|--------|---------|
+| `_common/resolve-tag` | Resolve tag + SHA. Official: reads version from file → `v{version}`. Beta: generates `release-beta-{date}-{sha}` |
+| `_common/draft` | Delete existing release/tag, create draft prerelease placeholder |
+| `_common/notes` | Generate changelog markdown from git log (prev tag to HEAD, max N commits, diff link, optional user notes + extra body) |
+| `_common/finalize` | Upload assets, update release body, set title and draft/prerelease/latest flags based on mode + build result |
+
+**Usage pattern** (same for both official and beta, across all repos):
+
+```yaml
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.pre.outputs.tag }}
+      sha: ${{ steps.pre.outputs.sha }}
+    steps:
+      - uses: synle/gha-workflows/actions/release/begin-release@main
+        id: pre
+        with:
+          mode: official  # or beta
+          project_name: my-project
+          version_file: package.json  # or Cargo.toml
+
+  build:
+    needs: [prepare]
+    # Repo-specific build steps (npm, cargo, tauri, etc.)
+
+  release:
+    needs: [prepare, build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: synle/gha-workflows/actions/release/end-release@main
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          project_name: my-project
+          mode: official  # or beta
+          build_result: ${{ needs.build.result }}
+          files: |
+            artifacts/my-asset.zip
+```
+
+**Finalize behavior matrix:**
+
+| Mode | Build Result | Title | Draft | Prerelease | Latest |
+|------|-------------|-------|-------|------------|--------|
+| official | success | `project tag` | false (published) | false | true |
+| official | failure | `project tag [Error]` | true | true | false |
+| beta | success | `project tag [Success]` | true | true | false |
+| beta | failure | `project tag [Error]` | true | true | false |
+
+**Repos using these actions:** url-porter, display-dj, display-dj-cli, sqlui-native.
 
 ### Common Patterns Across Workflows
 

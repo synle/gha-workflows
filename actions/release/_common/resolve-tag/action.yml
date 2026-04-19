@@ -1,0 +1,90 @@
+name: "Release: Resolve Tag"
+description: "Resolve the release tag and SHA for official or beta releases."
+
+inputs:
+  mode:
+    description: "Release mode: official or beta"
+    required: true
+  version:
+    description: "Version override (e.g. 2.0.1). If empty, reads from version_file."
+    required: false
+    default: ""
+  sha:
+    description: "Commit SHA to build from (beta only). Defaults to HEAD."
+    required: false
+    default: ""
+  version_file:
+    description: "File to read version from: package.json or Cargo.toml"
+    required: false
+    default: "package.json"
+  version_command:
+    description: "Custom shell command to extract version. Overrides version_file if set."
+    required: false
+    default: ""
+
+outputs:
+  tag:
+    description: "The resolved release tag (e.g. v2.0.1 or release-beta-2026-04-19-15-30-abc1234)"
+    value: ${{ steps.resolve.outputs.tag }}
+  version:
+    description: "The resolved version string (e.g. 2.0.1)"
+    value: ${{ steps.resolve.outputs.version }}
+  sha:
+    description: "The full commit SHA"
+    value: ${{ steps.resolve.outputs.sha }}
+  short_sha:
+    description: "The short commit SHA"
+    value: ${{ steps.resolve.outputs.short_sha }}
+  date:
+    description: "UTC date string used in beta tags (YYYY-MM-DD-HH-MM)"
+    value: ${{ steps.resolve.outputs.date }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Resolve tag and SHA
+      id: resolve
+      shell: bash
+      run: |
+        MODE="${{ inputs.mode }}"
+        INPUT_VERSION="${{ inputs.version }}"
+        INPUT_SHA="${{ inputs.sha }}"
+        VERSION_FILE="${{ inputs.version_file }}"
+        VERSION_COMMAND="${{ inputs.version_command }}"
+
+        # Resolve SHA
+        if [ -n "$INPUT_SHA" ]; then
+          git checkout "$INPUT_SHA" 2>/dev/null || true
+        fi
+        FULL_SHA=$(git rev-parse HEAD)
+        SHORT_SHA=$(git rev-parse --short HEAD)
+
+        if [ "$MODE" = "official" ]; then
+          # Resolve version
+          if [ -n "$INPUT_VERSION" ]; then
+            # Strip leading 'v' if present (callers may pass v2.0.1 or 2.0.1)
+            VERSION="${INPUT_VERSION#v}"
+          elif [ -n "$VERSION_COMMAND" ]; then
+            VERSION=$(eval "$VERSION_COMMAND")
+          elif [ "$VERSION_FILE" = "Cargo.toml" ]; then
+            VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          else
+            VERSION=$(node -e "process.stdout.write(require('./${VERSION_FILE}').version)")
+          fi
+          TAG="v${VERSION}"
+          DATE=""
+        elif [ "$MODE" = "beta" ]; then
+          DATE=$(date -u '+%Y-%m-%d-%H-%M')
+          TAG="release-beta-${DATE}-${SHORT_SHA}"
+          VERSION=""
+        else
+          echo "::error::Unknown mode: ${MODE}. Must be 'official' or 'beta'."
+          exit 1
+        fi
+
+        echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+        echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+        echo "sha=${FULL_SHA}" >> "$GITHUB_OUTPUT"
+        echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+        echo "date=${DATE}" >> "$GITHUB_OUTPUT"
+        echo "Resolved: mode=${MODE} tag=${TAG} version=${VERSION} sha=${SHORT_SHA}"
