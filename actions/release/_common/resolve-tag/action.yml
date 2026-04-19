@@ -14,7 +14,7 @@ inputs:
     required: false
     default: ""
   version_file:
-    description: "File to read version from: package.json or Cargo.toml"
+    description: "File to read version from. Any JSON file with a \"version\" field (package.json, tauri.conf.json, etc.) or Cargo.toml."
     required: false
     default: "package.json"
   version_command:
@@ -66,9 +66,11 @@ runs:
             VERSION="${INPUT_VERSION#v}"
           elif [ -n "$VERSION_COMMAND" ]; then
             VERSION=$(eval "$VERSION_COMMAND")
-          elif [ "$VERSION_FILE" = "Cargo.toml" ]; then
-            VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          elif [[ "$VERSION_FILE" == *.toml ]]; then
+            # TOML: extract version from key = "value" format (Cargo.toml, etc.)
+            VERSION=$(grep '^version' "$VERSION_FILE" | head -1 | sed 's/.*"\(.*\)".*/\1/')
           else
+            # JSON: any file with a "version" field (package.json, tauri.conf.json, etc.)
             VERSION=$(node -e "process.stdout.write(require('./${VERSION_FILE}').version)")
           fi
           TAG="v${VERSION}"
