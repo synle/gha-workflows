@@ -72,12 +72,10 @@ runs:
               const fs = require('fs');
               const f = './${VERSION_FILE}';
               const c = fs.readFileSync(f, 'utf-8');
-              if (f.endsWith('.toml')) {
-                const m = c.match(/^version\s*=\s*\"(.+?)\"/m);
-                process.stdout.write(m ? m[1] : '');
-              } else {
-                process.stdout.write(JSON.parse(c).version);
-              }
+              const v = f.endsWith('.toml')
+                ? (c.match(/^version\s*=\s*\"(.+?)\"/m) || [])[1] || ''
+                : JSON.parse(c).version;
+              process.stdout.write(v);
             ")
           fi
           TAG="v${VERSION}"
