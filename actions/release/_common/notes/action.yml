@@ -43,7 +43,8 @@ runs:
         CURRENT_SHA=$(git rev-parse HEAD)
 
         # Find the previous official release tag (v* only, exclude current tag and beta tags)
-        PREV_TAG=$(git tag --sort=-v:refname | grep '^v' | grep -v "^${TAG}$" | head -1)
+        # `|| true` so missing prior tags don't fail under `set -e -o pipefail`
+        PREV_TAG=$(git tag --sort=-v:refname | grep '^v' | grep -v "^${TAG}$" | head -1 || true)
 
         if [ -n "$PREV_TAG" ]; then
           RANGE="${PREV_TAG}..HEAD"
